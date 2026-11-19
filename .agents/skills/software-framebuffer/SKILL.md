@@ -1,0 +1,98 @@
+---
+name: software-framebuffer
+description: "How the low-resolution picture works in sprite-stack-kit: the Uint32Array of packed colours, the depth array, integer upscaling with hard pixels, dithering instead of blending, and DOM overlays for text. Use when drawing anything new into the picture, adding an effect (flash, glow, vignette, screen shake), fixing blurry or misaligned pixels, handling resize or high-DPI screens, or adding a HUD, text or buttons."
+---
+
+# The picture
+
+File: `examples/starter/src/framebuffer.js`. Shown by `main.js`.
+
+## What it is
+
+`createFramebuffer()` returns one object with four arrays over the same frame:
+
+| Field | Type | Holds |
+| --- | --- | --- |
+| `color` | `Uint32Array` | One packed colour per pixel. Index is `y * width + x` |
+| `depth` | `Float32Array` | How far into the view the surface at that pixel is |
+| `mask` | `Uint8Array` | Scratch for the sprite being drawn. Always left cleared |
+| `bytes` | `Uint8ClampedArray` | The same memory as `color`, as bytes, for `ImageData` |
+
+`resize(w, h)` allocates all four. It is the only place that allocates. `clear()` sets every colour to `EMPTY` (0) and every depth to `FAR`.
+
+## Colours
+
+- Make a colour with `rgb(r, g, b)`. It is packed as `0xAABBGGRR` with full alpha.
+- `EMPTY` is 0 and means "nothing drawn here yet". Every real colour has full alpha, so no real colour is 0.
+- `tint(color, r, g, b)` scales the channels, for shade.
+- `mix(a, b, amount)` moves `a` toward `b` by `amount` out of 256. Use it for stepped fog, with only a few distinct amounts.
+- Build colours once, when a palette is made. Do not call `rgb()` per pixel.
+
+## The order of a frame
+
+`render()` in `game.js` does this, and new drawing has to fit into it:
+
+1. `fb.clear()`.
+2. `drawWorld`: ground and clouds, near to far. It writes only where `color` is `EMPTY`, and it writes `depth`.
+3. `drawSky`: fills whatever is still `EMPTY`.
+4. Everything else (trails, sprites, particles). Each of these **tests** `depth` and overwrites `color`.
+
+A pixel drawn in step 4 follows this pattern:
+
+```js
+if (project(cam, x, y, z)) {
+  const px = Math.round(cam.sx)
+  const py = Math.round(cam.sy)
+  if (px >= 0 && py >= 0 && px < fb.width && py < fb.height) {
+    const at = py * fb.width + px
+    if (fb.depth[at] >= cam.depth - 1) fb.color[at] = colour // not behind a hill or a cloud
+  }
+}
+```
+
+Sprites do not write `depth`. When two of them can overlap, draw the farther one first.
+
+## Showing it
+
+`fit()` in `main.js`:
+
+- Picks `pixel`, a whole number of screen pixels per game pixel.
+- Sets the canvas's `width` and `height` to the game size, and its CSS size to exactly `pixel` times that.
+- Relies on `image-rendering: pixelated` in `index.html`.
+- Wraps `fb.bytes` in one `ImageData`. Each frame is then a single `putImageData`.
+
+After any `resize`, make a new `ImageData`. The old one points at memory that is no longer used.
+
+Pointer positions arrive in screen pixels. Divide by `pixel` before giving them to the game.
+
+## Fading without blending
+
+`BAYER4` holds 16 thresholds. To show something at a strength from 0 to 1:
+
+```js
+if (strength * 16 > BAYER4[((y & 3) << 2) | (x & 3)]) fb.color[at] = colour
+```
+
+At half strength, half the pixels are drawn in a fixed checker-like pattern. The trails in `game.js` fade this way. Use it for smoke, spray, fades and soft edges.
+
+## Text, counters and buttons
+
+Do not draw text into the picture. It would be blocky and hard to read. Put DOM elements over the canvas, as `index.html` does with `#hint` and `#view`. Update their text only when it changes.
+
+## Whole-picture effects
+
+Run these after everything is drawn, as a loop over `fb.color`:
+
+- **Flash:** `mix` every pixel toward white by an amount that decays.
+- **Vignette:** precompute a per-pixel darkening table in `resize`, then apply it with `tint` logic.
+- **Screen shake:** add a small offset to `cam.cx` and `cam.cy` before drawing. Do not move the canvas.
+- **Glow:** collect bright pixels at half size, blur, add back. Dash's `post.ts` does this. Use the `study-the-reference` skill to read it.
+
+## Mistakes to avoid
+
+- **Fractional CSS scale.** If the canvas's CSS size is not an exact multiple of its pixel size, pixels come out uneven. Keep the `fit()` arithmetic.
+- **Smoothing.** Never draw the picture with `drawImage` scaling or CSS transforms that resample.
+- **Allocating per frame.** No `new`, no array literals, no closures inside `update` or `render`.
+- **Forgetting the bounds test.** Writing outside `0..width-1` wraps onto the next row.
+- **`| 0` on negative numbers.** It rounds toward zero, not down. Use `Math.floor`, or keep values positive as `terrain.js` does.
+- **Leaving `mask` dirty.** If you use it, clear the area you touched before returning.

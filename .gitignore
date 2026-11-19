@@ -1,0 +1,10 @@
+# Third-party reference material. Downloaded by scripts/fetch-reference.mjs for local study.
+# It belongs to its authors and must never be committed. See docs/getting-the-source.md.
+reference/
+
+# Frames saved by scripts/snapshot.mjs
+snapshots/
+
+node_modules/
+.DS_Store
+*.log

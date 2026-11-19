@@ -1,0 +1,18 @@
+{
+  "name": "sprite-stack-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A starter kit for building pixel-art games with no 3D engine: sprite stacking on a hand-written software renderer.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node scripts/serve.mjs examples/starter",
+    "test": "node scripts/check.mjs",
+    "snapshot": "node scripts/snapshot.mjs",
+    "fetch-reference": "node scripts/fetch-reference.mjs",
+    "reference": "node scripts/serve.mjs reference/creativedash-fighter"
+  }
+}
