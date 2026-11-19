@@ -43,7 +43,7 @@ That page is about 1 KB of HTML. It loads React from `esm.sh`, loads a small hos
 This kit has a script that downloads the same files:
 
 ```sh
-npm run fetch-reference
+bun run fetch-reference
 ```
 
 It saves them in `reference/creativedash-fighter/`, which is git-ignored. On revision 43 that is 52 files, about 3 MB:
@@ -58,7 +58,7 @@ It saves them in `reference/creativedash-fighter/`, which is git-ignored. On rev
 
 The script also writes `MANIFEST.json`, which records every file's address and checksum, and `NOTICE.md`, which says who owns the files.
 
-Use `npm run fetch-reference -- --no-assets` to skip the sound and artwork (about 2.5 MB).
+Use `bun run fetch-reference --no-assets` to skip the sound and artwork (about 2.5 MB).
 
 ### What the files are
 
@@ -69,7 +69,7 @@ Use `npm run fetch-reference -- --no-assets` to skip the sound and artwork (abou
 ### Running the copy locally
 
 ```sh
-npm run reference
+bun run reference
 ```
 
 Then open the address it prints. The copy runs unchanged. It still needs an internet connection, because the page loads React from `esm.sh` and Forge's host script from `forge.ui8.ai`.
@@ -111,4 +111,4 @@ People asked whether 32 KB meant source or a compiled build. Dash has not said h
 
 The gzipped first-version renderer is the closest match to 32 KB, but that is a guess. A minified build would be smaller than every figure here.
 
-For comparison, this kit's starter is about 66 KB with comments and about 25 KB gzipped. It does much less.
+For comparison, this kit's starter is about 99 KB with comments and 37 KB gzipped. Minified with `bun build examples/starter/src/main.js --minify` it is 35 KB, or 16 KB gzipped. It does much less than Dash's current game.

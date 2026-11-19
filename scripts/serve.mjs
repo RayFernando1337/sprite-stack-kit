@@ -1,9 +1,10 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // A tiny static file server with no dependencies, for running the starter (or the downloaded
 // reference) locally. ES modules do not load from file://, so a game needs to be served.
 //
-//   node scripts/serve.mjs examples/starter            # http://localhost:5173
-//   node scripts/serve.mjs reference/creativedash-fighter --port 5180
+//   bun start                                          # the starter, at http://localhost:5173
+//   bun scripts/serve.mjs examples/my-game             # another game
+//   bun scripts/serve.mjs reference/creativedash-fighter --port 5180
 //
 // It listens on this computer only (127.0.0.1).
 
@@ -25,7 +26,7 @@ const base = resolve(root, dirArg)
 
 if (!existsSync(base)) {
   console.error(`Nothing to serve: ${base} does not exist.`)
-  if (dirArg.startsWith('reference')) console.error('Run `npm run fetch-reference` first.')
+  if (dirArg.startsWith('reference')) console.error('Run `bun run fetch-reference` first.')
   process.exit(1)
 }
 

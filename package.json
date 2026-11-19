@@ -6,13 +6,14 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=20"
+    "bun": ">=1.0.0"
   },
   "scripts": {
-    "start": "node scripts/serve.mjs examples/starter",
-    "test": "node scripts/check.mjs",
-    "snapshot": "node scripts/snapshot.mjs",
-    "fetch-reference": "node scripts/fetch-reference.mjs",
-    "reference": "node scripts/serve.mjs reference/creativedash-fighter"
+    "start": "bun scripts/serve.mjs examples/starter",
+    "check": "bun scripts/check.mjs",
+    "snapshot": "bun scripts/snapshot.mjs",
+    "figures": "bun scripts/figures.mjs",
+    "fetch-reference": "bun scripts/fetch-reference.mjs",
+    "reference": "bun scripts/serve.mjs reference/creativedash-fighter"
   }
 }

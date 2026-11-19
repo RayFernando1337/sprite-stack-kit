@@ -2,10 +2,11 @@
 
 import { createGame } from './game.js'
 
+// ?seed=3 picks the world, and ?view=chase or ?view=cockpit picks the view to start in
 const query = new URLSearchParams(location.search)
 const game = createGame({
   seed: Number(query.get('seed')) || 7,
-  view: query.get('view') === 'chase' ? 'chase' : 'top',
+  view: query.get('view') ?? 'top',
 })
 const canvas = document.getElementById('game')
 const ctx = canvas.getContext('2d')
@@ -16,11 +17,13 @@ const touch = matchMedia('(pointer: coarse)').matches
 const HINTS = touch
   ? {
       top: 'DRAG TO STEER · TAP TO ROLL · HOLD FOR THRUSTERS · VIEW FOR THE CHASE VIEW',
-      chase: 'DRAG TO STEER AND CLIMB · TAP TO ROLL · HOLD FOR THRUSTERS · VIEW FOR THE OVERHEAD VIEW',
+      chase: 'DRAG TO STEER AND CLIMB · TAP TO ROLL · HOLD FOR THRUSTERS · VIEW FOR THE COCKPIT',
+      cockpit: 'DRAG TO STEER AND CLIMB · VIEW FOR THE OVERHEAD VIEW',
     }
   : {
       top: 'MOVE TO STEER · CLICK TO ROLL · HOLD FOR THRUSTERS · W/S TO CLIMB AND DIVE · SPACE FOR CHASE VIEW · E TO PULL THE STACK APART',
-      chase: 'POINT TO STEER AND CLIMB · CLICK TO ROLL · HOLD FOR THRUSTERS · SPACE FOR OVERHEAD VIEW',
+      chase: 'POINT TO STEER AND CLIMB · CLICK TO ROLL · HOLD FOR THRUSTERS · SPACE FOR THE COCKPIT',
+      cockpit: 'POINT TO STEER AND CLIMB · CLICK TO ROLL · HOLD FOR THRUSTERS · SPACE FOR OVERHEAD VIEW',
     }
 
 let pixel = 3 // screen pixels per game pixel
@@ -51,6 +54,7 @@ function tick(now) {
   if (game.view !== shownView) {
     shownView = game.view
     hint.textContent = HINTS[shownView]
+    hint.classList.toggle('high', shownView === 'cockpit')
   }
   requestAnimationFrame(tick)
 }
@@ -69,7 +73,7 @@ canvas.addEventListener('pointerleave', (e) => {
   if (e.pointerType === 'mouse') game.pointerLeave()
 })
 canvas.addEventListener('contextmenu', (e) => e.preventDefault())
-viewButton.addEventListener('click', () => game.toggleView())
+viewButton.addEventListener('click', () => game.nextView())
 
 // ── keys
 const held = new Set()
@@ -85,7 +89,7 @@ addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return
   if (e.code === 'Space') {
     e.preventDefault()
-    if (!e.repeat) game.toggleView()
+    if (!e.repeat) game.nextView()
   } else if (e.code === 'KeyE') {
     if (!e.repeat) game.toggleSpread()
   } else if (e.code === 'KeyR') {

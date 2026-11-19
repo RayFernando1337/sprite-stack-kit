@@ -1,11 +1,11 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // Downloads the public, published build of Dash's "fighter" demo into reference/ so you can
 // read it and run it locally. Nothing is fetched that a browser does not already load when it
 // opens the page, and no sign-in is involved.
 //
-//   node scripts/fetch-reference.mjs                 # code and assets → reference/creativedash-fighter
-//   node scripts/fetch-reference.mjs --no-assets     # code only (skips about 2.5 MB of images and sound)
-//   node scripts/fetch-reference.mjs --out /tmp/ref  # somewhere else
+//   bun run fetch-reference                  # code and assets → reference/creativedash-fighter
+//   bun run fetch-reference --no-assets      # code only (skips about 2.5 MB of images and sound)
+//   bun run fetch-reference --out /tmp/ref   # somewhere else
 //
 // The files belong to their author. reference/ is git-ignored: study them, do not publish them.
 // See docs/getting-the-source.md.
@@ -168,7 +168,7 @@ not cover them. No license was published with them, so:
 To build on Dash's project itself, sign in to Forge and press Remix:
 ${sharePage}
 
-To run this copy locally: \`npm run reference\`, then open the address it prints.
+To run this copy locally: \`bun run reference\`, then open the address it prints.
 `
 await mkdir(out, { recursive: true })
 await writeFile(join(out, 'MANIFEST.json'), JSON.stringify(manifest, null, 2) + '\n')

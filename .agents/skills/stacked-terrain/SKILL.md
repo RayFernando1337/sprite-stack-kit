@@ -50,11 +50,11 @@ All randomness comes from `makeRng(seed)` and `hash2(x, y)`.
 
 **More or less land, more or fewer clouds.** Pass `{ land, clouds }` to `buildWorld`.
 
-After any change, run `npm test`. It checks that the same seed still gives the same world and that nothing is too tall.
+After any change, run `bun run check`. It checks that the same seed still gives the same world and that nothing is too tall. The cockpit's map screen colours the ground by material (`MAP_TONE` in `cockpit.js`), so give a new material a tone there too.
 
 ## How it is drawn
 
-`drawWorld(fb, cam, world, time, caster)` sweeps depth from the nearest row of the view to the farthest.
+`drawWorld(to, cam, world, time, caster)` sweeps depth from the nearest row of the view to the farthest. `to` is the frame, or the larger sheet when the view is banked, so the sweep always uses `to.width` and `to.height`. `docs/images/sweep.png` shows the sweep stopped at three depths.
 
 At each depth step it works out, once, the screen row of every possible height (`rowsNow`) and keeps the rows from the step before (`rowsPrev`). Then for each screen column:
 
@@ -67,7 +67,7 @@ At each depth step it works out, once, the screen row of every possible height (
 
 The step size grows with distance so that each step is about one screen row of sea.
 
-`drawSky` then fills what is left: sky bands above the horizon, haze below.
+`drawSky(to, cam, world, span)` then fills what is left: sky bands above the horizon, haze below. `span` is how many rows the whole sky takes. The game passes it from the frame's height, so the sky looks the same on the sheet.
 
 ## Shade, fog and sparkle
 
@@ -86,4 +86,5 @@ To add **time of day**, write one function that tints a colour for sunset or nig
 - **Overwriting in the sweep.** Never write a pixel that is not `EMPTY` inside `drawWorld`. Near ground would be painted over by far ground.
 - **Moving things in the height map.** The map is for things that stay put. Anything that moves is a sprite stack, depth-tested against the map.
 - **A large picture.** The sweep costs one map lookup per screen column per depth step. Keep the picture near 400 pixels wide.
+- **Assuming the horizon is level.** The sweep draws an upright world. A banked view comes from turning the finished picture (`roll.js`), never from the sweep.
 - **Shimmer far away.** If distant ground flickers, lower `VIEW_DISTANCE` or start the fog sooner. Do not shrink the step size; that costs speed everywhere.

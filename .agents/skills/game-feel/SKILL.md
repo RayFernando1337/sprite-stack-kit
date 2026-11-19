@@ -20,6 +20,8 @@ A higher `rate` is snappier. This form gives the same motion at any frame rate. 
 
 Use it for turn rate, bank, pitch, boost, camera position, anything. Typical rates: 2 to 3 for heavy things, 5 to 7 for quick ones, 20 for a hard correction.
 
+For a move that should also **start** gently, such as a view change, use the spring in `glide()`. It carries speed, never overshoots, and can be given a new goal half-way.
+
 ## How the craft flies
 
 - Steering sets a wanted turn rate. `yawRate` eases toward it, and `yaw` adds `yawRate × dt`.
@@ -39,7 +41,9 @@ Change the numbers in `TUNING` first. They cover speed, turn rate, bank, altitud
 - **Touch** arrives as pointer events, so drag, tap and hold already work. Add on-screen buttons as DOM elements, as the VIEW button is.
 - **A gamepad** is read by polling `navigator.getGamepads()` once per frame in `main.js` and passing the stick to `setKeys`. Apply a dead zone of about 0.15.
 
-Keep the game free of page code. `main.js` turns events into calls on the game. That is also what lets `npm test` drive the game with no browser.
+Keep the game free of page code. `main.js` turns events into calls on the game. That is also what lets `bun run check` drive the game with no browser.
+
+The pointer steers differently in each view: toward the pointer from above, and left, right, up and down from behind and from the cockpit. The `one-camera-views` skill has the rules.
 
 ## Trails
 
@@ -94,7 +98,7 @@ Dash's game has enemies, a cannon, missiles and a dodge. Use the `study-the-refe
 The starter is silent. Two ways to add sound with no files:
 
 - **Synthesise it.** Web Audio oscillators and filtered noise can make an engine drone, wind, gunfire and explosions.
-- **Keep it out of the game.** Have the game expose plain numbers (speed, boost, events since last frame) and let a `sound.js` beside `main.js` turn them into audio.
+- **Keep it out of the game.** Have the game expose plain numbers (speed, boost, events since last frame) and let a `sound.js` beside `main.js` turn them into audio. The cockpit's instruments already read the game this way, through the `gauges` object in `render()`.
 
 Browsers allow sound only after the player has clicked or pressed a key. Create the `AudioContext` inside the first input event.
 
@@ -104,4 +108,4 @@ Browsers allow sound only after the player has clicked or pressed a key. Create 
 - **Frame-count timing.** `value += 0.1` per frame runs twice as fast at 120 frames per second. Multiply by `dt`.
 - **`Math.random()` in effects.** It breaks repeatable frames, and the checks will fail.
 - **Arrays that grow.** `push` and `splice` in the frame loop cause pauses. Use pools.
-- **Page code inside the game.** The game must run in Node for the checks.
+- **Page code inside the game.** The game must run with no browser for the checks.

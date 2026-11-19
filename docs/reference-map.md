@@ -2,7 +2,7 @@
 
 This page says where things are in the public build of Dash's "fighter", so you can find and read the part you care about.
 
-Get the files first with `npm run fetch-reference`. Paths below are inside `reference/creativedash-fighter/`.
+Get the files first with `bun run fetch-reference`. Paths below are inside `reference/creativedash-fighter/`.
 
 Line numbers are for published revision 43 (fetched 18 November 2026). They will drift when Dash updates the game, so search for the function name if a number is off.
 
@@ -60,7 +60,7 @@ This page describes his code. It does not reproduce it. Read it to learn, then w
 
 **Shadows.** In `drawWorld`, each ground pixel looks up the cloud map at a spot offset toward the sun. Jet shadows test the jet's top-down outline (`shadowMask`) the same way.
 
-**The cockpit.** The view rolls with the jet. `render` draws the world onto a larger square sheet, `turnSheet` rotates it into the frame, and `drawCockpitView` lays the cockpit over it. Only the part of the sheet that will be visible is drawn (`colLo`, `colHi`, `rowLo`, `rowHi`). While this happens, `render` swaps the picture, depth and mask arrays for the sheet's, then swaps them back.
+**The cockpit.** The view rolls with the jet. `render` draws the world onto a larger square sheet, `turnSheet` rotates it into the frame, and `drawCockpitView` lays the cockpit over it. Only the part of the sheet that will be visible is drawn (`colLo`, `colHi`, `rowLo`, `rowHi`). While this happens, `render` swaps the picture, depth and mask arrays for the sheet's, then swaps them back. The starter has its own, simpler version of this in `roll.js` and `cockpit.js`: two layers where his has four, and no radar or colour schemes.
 
 **Flight.** `step` smooths everything with the same pattern: move a share of the way to the goal each frame. The jet follows the ground ahead (`groundAhead`) with room to spare, so in this version it cannot crash. A press shorter than `HOLD = 0.2` seconds is a roll and a longer one opens the thrusters. With nobody steering, the jet wanders by itself.
 

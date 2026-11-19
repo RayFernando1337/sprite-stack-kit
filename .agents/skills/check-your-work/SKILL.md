@@ -1,6 +1,6 @@
 ---
 name: check-your-work
-description: "How to verify a change in sprite-stack-kit: the headless checks (npm test), saving and looking at frames (npm run snapshot), trying the game in a browser, measuring frame time, and adding a check for a new feature. Use before saying any change to a game is done, when a frame looks wrong, when something is slow, or when adding a feature that needs its own check."
+description: "How to verify a change in sprite-stack-kit: the headless checks (bun run check, bun test), saving and looking at frames (bun run snapshot), trying the game in a browser, measuring frame time, redrawing the documents' figures, and adding a check for a new feature. Use before saying any change to a game is done, when a frame looks wrong, when something is slow, or when adding a feature that needs its own check."
 ---
 
 # Checking a change
@@ -10,23 +10,28 @@ A game can run without errors and still be wrong: a blank band of sky, a craft d
 ## 1. Run the checks
 
 ```sh
-npm test
-npm test -- --game examples/my-game   # for a copy of the starter
+bun run check
+bun run check --game examples/my-game   # for a copy of the starter
+bun test                                # the same checks, through Bun's test runner
 ```
 
-It runs the game in Node with no browser and takes a few seconds. It checks that:
+They run the game with no browser and take a few seconds. They check that:
 
 - the encoded model decodes to the same grid, and the model is symmetrical
 - the same seed gives the same world, and land covers the share asked for
 - nothing in the world is taller than the renderer allows
 - the camera formula puts known points on known pixels
-- both views fill every pixel at three frame shapes, and the craft is on screen
-- every frame of a view change is complete
+- every view fills every pixel at three frame shapes, with the craft on screen from above and behind and out of sight from the cockpit
+- the craft is solid in the chase view, however the chase camera is tuned
+- every view still draws in a frame that is tiny, very tall or very wide
+- the camera slides one way through all three views, and every frame on the way is complete
+- in the cockpit the eye stays in the craft, the picture banks with it, and a barrel roll turns the picture once and leaves it level
+- a turned sheet covers the whole frame at every angle, and a right bank lifts the right end of the horizon
 - the same seed and input draw the same frame
-- a turn, a click and a hold each do what they should
+- a turn, a click and a hold each do what they should, and pointing steers from behind and from the cockpit
 - a held dive never reaches the ground
-- a frame fits easily in a sixtieth of a second
-- the game uses no libraries, no network and no WebGL
+- a frame fits easily in a sixtieth of a second, in every view
+- the game uses no libraries, no network, no WebGL and no `Math.random()`
 - the local server serves the folder it is given
 
 If a check fails, fix the cause. Do not loosen the check unless the promise itself has changed, and say so if it has.
@@ -34,17 +39,18 @@ If a check fails, fix the cause. Do not loosen the check unless the promise itse
 ## 2. Look at frames
 
 ```sh
-npm run snapshot
+bun run snapshot
 ```
 
 This writes PNG files to `snapshots/`. Open them and look. If you can read images, read them yourself.
 
 | Option | Effect |
 | --- | --- |
-| `--view top,chase,between,apart` | Which frames to save. `between` is half-way through a view change. `apart` pulls the slices apart |
+| `--view top,chase,cockpit,between,entering,apart` | Which frames to save. `between` is half-way from overhead to chase. `entering` is half-way from chase into the cockpit. `apart` pulls the slices apart |
 | `--seed 3` | A different world |
 | `--seconds 6` | How long to fly before the frame is taken |
 | `--turn 1` | Hold a turn (−1 to 1) |
+| `--climb 1` | Hold a climb or a dive (−1 to 1) |
 | `--boost` | Hold the thrusters |
 | `--width 480 --height 270` | Frame size |
 | `--scale 3` | How much to enlarge the saved image |
@@ -58,7 +64,9 @@ What to look for:
 - **Holes in the craft.** Seams between cells.
 - **Stripes or shimmer in the distance.** The depth step is too coarse.
 - **Colours that are off.** A palette index points at the wrong row.
-- **The `between` frame.** It should look like a normal picture from an odd angle.
+- **The `between` and `entering` frames.** Each should look like a normal picture from an odd angle.
+- **The cockpit with `--turn 1`.** The horizon, the head-up display and the attitude ball should all tilt the same way, and no corner of the view should be blank.
+- **The cockpit at a phone shape**, `--width 200 --height 420`. Nothing on the dashboard should overlap or fall off the edge.
 
 Take frames at more than one seed and with a turn held. One good frame proves little.
 
@@ -67,22 +75,22 @@ Take frames at more than one seed and with a turn held. One good frame proves li
 Do this when you changed input, the page, or anything that depends on timing.
 
 ```sh
-npm start
+bun start
 ```
 
-Open the address it prints and try: steering with the pointer in both views, a click, a hold, the keys, Space, resizing the window, and a narrow phone-shaped window. Open the browser's console and confirm there are no errors.
+Open the address it prints and try: steering with the pointer in all three views, a click, a hold, the keys, Space three times, resizing the window, and a narrow phone-shaped window. Open the browser's console and confirm there are no errors.
 
 If you drive a browser from a tool, keep the tab visible. A hidden tab slows its animation to a crawl, and the game will seem stuck.
 
 ## 4. Measure speed when you touch drawing
 
-`npm test` prints milliseconds per frame for both views. Compare before and after your change. A frame has 16.6 milliseconds at 60 frames per second, and slow phones need a wide margin. If your change doubles the time, find out why before going on.
+`bun run check` prints milliseconds per frame for each view. Compare before and after your change. A frame has 16.6 milliseconds at 60 frames per second, and slow phones need a wide margin. If your change doubles the time, find out why before going on.
 
-Common causes: allocating inside the loop, a per-pixel function call that could be a table, or a larger picture.
+Common causes: allocating inside the loop, a per-pixel function call that could be a table, repainting something every frame that could be painted once, or a larger picture.
 
 ## 5. Add a check for a new promise
 
-When you add a feature that must keep working, add a check to `scripts/check.mjs`:
+When you add a feature that must keep working, add a check inside `runChecks()` in `scripts/check.mjs`:
 
 ```js
 {
@@ -95,10 +103,22 @@ When you add a feature that must keep working, add a check to `scripts/check.mjs
 
 `fly(game, frames, each)` advances the game at 60 steps a second and returns the last frame. `check(name, ok, detail)` records the result. Write the name as a plain statement of what should be true.
 
+Then make sure the check can fail. Break the feature on purpose, see the check fail, and put the feature back. A check that cannot fail protects nothing.
+
+## 6. Redraw the figures when drawing changes
+
+The pictures in `docs/` are drawn by the game's own code. If you changed what the starter draws, run:
+
+```sh
+bun run figures
+```
+
+Look at the files it writes in `docs/images/`, and commit them with your change.
+
 ## Before you report
 
-- `npm test` passes, and you ran it after your last edit.
+- `bun run check` passes, and you ran it after your last edit.
 - You looked at fresh snapshots.
 - You tried it in a browser if input or the page changed.
-- The README and the matching skill still describe what the code does.
+- The README, the matching skill and the documents still describe what the code does.
 - You say plainly what you checked and what you did not.

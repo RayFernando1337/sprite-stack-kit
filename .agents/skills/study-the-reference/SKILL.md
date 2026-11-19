@@ -1,6 +1,6 @@
 ---
 name: study-the-reference
-description: "How to download, run and read Dash's original 'fighter' game to learn how it does something, without copying it. Use when the user asks how the original works, wants a feature the original has (cockpit view, enemies, cannon, missiles, dodge and slow motion, crash and ejection, parachute, clouds that part, wake on the sea, glow and film grain, sound, tutorial, touch or gamepad controls), or asks how to get the game's source from the Forge share link."
+description: "How to download, run and read Dash's original 'fighter' game to learn how it does something, without copying it. Use when the user asks how the original works, wants a feature the original has and the starter lacks (enemies, cannon, missiles, dodge and slow motion, crash and ejection, parachute, clouds that part, wake on the sea, glow and film grain, sound, tutorial, touch or gamepad controls, a richer cockpit with radar and parallax), or asks how to get the game's source from the Forge share link."
 ---
 
 # Studying Dash's game
@@ -10,7 +10,7 @@ Dash's "fighter" is the game this kit learns from. Its code is public but has no
 ## Get it
 
 ```sh
-npm run fetch-reference
+bun run fetch-reference
 ```
 
 This downloads the published build into `reference/creativedash-fighter/`. It needs the network. The folder is git-ignored.
@@ -18,7 +18,7 @@ This downloads the published build into `reference/creativedash-fighter/`. It ne
 - If the folder is already there, read it. Run the command again only to pick up a newer revision.
 - If the download fails, tell the user. The page may have moved or been unpublished. Do not look for copies elsewhere. Point the user at the share link in `docs/getting-the-source.md`.
 
-To play it locally, run `npm run reference` and open the address it prints. It needs the network too, because the page loads React from a CDN.
+To play it locally, run `bun run reference` and open the address it prints. It needs the network too, because the page loads React from a CDN.
 
 ## Find the part you need
 
@@ -32,6 +32,8 @@ Two renderers are in the download:
 The files are compiled, so they are plain JavaScript under `.ts` names. The comments are intact and explain intent well. Read them.
 
 `share-metadata.json` lists every setting in the game's control panel with its default. It is the quickest way to see what can be tuned.
+
+The starter already has its own versions of the three views, the rolled cockpit picture and a cockpit with instruments. For those, read the starter first (`camera.js`, `roll.js`, `cockpit.js`). Go to Dash's code for what he does beyond them.
 
 ## How to use what you learn
 

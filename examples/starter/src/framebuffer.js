@@ -54,8 +54,10 @@ export function createFramebuffer() {
       this.mask = new Uint8Array(this.width * this.height)
     },
     clear() {
-      this.color.fill(EMPTY)
-      this.depth.fill(FAR)
+      // Only the part in use: roll.js draws on a sheet that is often smaller than its memory.
+      const used = this.width * this.height
+      this.color.fill(EMPTY, 0, used)
+      this.depth.fill(FAR, 0, used)
     },
   }
 }

@@ -14,9 +14,17 @@ Dash made **fighter**, the game that started all of this, and published it on [U
 - [The original post](https://x.com/creativedash/status/2122000830895386680), 15 November 2026: "No 3D engine, no polygons, 32 KB of code."
 - [The update](https://x.com/creativedash/status/2122389375673913491), 16 November 2026: "dogfights, crashes, explosions, tutorials, gamepad support + a few other tricks". In the same post he says he has decided to build "the real game".
 
-**What this kit takes from his work.** The starter in `examples/starter` was written for this kit after studying his published build, and it follows his approach closely. The camera formula, the near-to-far sweep that draws the ground as stacked columns, the way the slices of a stack are ordered and outlined, and the flight feel are his design. The documents in `docs/` and the skills describe how his code is organised.
+**What this kit takes from his work.** The starter in `examples/starter` was written for this kit after studying his published build, and it follows his approach closely. These are his design:
 
-**What this kit does not take.** None of his source text, artwork, model data or sound is in this repository. The starter's craft, world, colours and code were made for this kit. His files were published without a license, so this kit downloads them to a git-ignored folder for private study and never redistributes them.
+- the camera formula, and mixing three views by weights so the camera never cuts
+- the near-to-far sweep that draws the ground as stacked columns
+- the way the slices of a stack are ordered and outlined
+- the cockpit view: an eye inside the craft that dissolves the craft on the way in, a banked picture made by drawing the world on a larger sheet and turning it, and a pixel-art cockpit painted once with live instruments and a head-up display drawn over it
+- the flight feel
+
+The documents in `docs/` and the skills describe how his code is organised.
+
+**What this kit does not take.** None of his source text, artwork, model data or sound is in this repository. The starter's craft, world, cockpit, instruments, colours and code were made for this kit. His files were published without a license, so this kit downloads them to a git-ignored folder for private study and never redistributes them.
 
 If you build something with this kit, please credit Dash too.
 

@@ -67,22 +67,33 @@ export function eyeHeight(cam) {
 }
 
 /**
- * Sets the camera somewhere between two poses: view = 0 is overhead, view = 1 is the chase
- * view behind the craft. `tilt` is given because the game may raise or lower the chase eye to
- * keep it clear of hills and clouds.
+ * Sets the camera to a mix of three poses. `chase` and `cockpit` are how much of each of
+ * those poses is in the mix, 0..1; whatever is left over is the overhead pose. `look`,
+ * `heading` and `tilt` are mixed by the game, because they follow the craft.
+ *
+ *              overhead     chase                    cockpit
+ *   persp      0            1 ÷ chaseDistance        1 ÷ cockpitLook
+ *   zoom       1            craft fills chaseWidth   lens ÷ cockpitLook
+ *   anchor     the middle   a little below it        a little above it
  */
-export function aimCamera(cam, view, focus, heading, tilt, width, height, tune) {
-  cam.x = focus.x
-  cam.y = focus.y
-  cam.alt = focus.alt
+export function aimCamera(cam, chase, cockpit, look, heading, tilt, width, height, tune) {
+  cam.x = look.x
+  cam.y = look.y
+  cam.alt = look.alt
   cam.heading = heading
   cam.sin = Math.sin(heading)
   cam.cos = Math.cos(heading)
-  cam.persp = view / tune.chaseDistance
+  cam.persp = chase / tune.chaseDistance + cockpit / tune.cockpitLook
   cam.tilt = tilt
-  // zoom slides geometrically, so the craft grows at an even rate all the way through the move
+  // Zoom slides geometrically, so things grow at an even rate all the way through a move.
   const chaseZoom = Math.max(1, (tune.chaseWidth * width) / tune.craftWidth)
-  cam.zoom = Math.exp(view * Math.log(chaseZoom))
+  const cockpitZoom = Math.max(1, (tune.cockpitLens * Math.max(width, height)) / tune.cockpitLook)
+  cam.zoom = Math.exp(chase * Math.log(chaseZoom) + cockpit * Math.log(cockpitZoom))
   cam.cx = width >> 1
-  cam.cy = Math.round(height * (0.5 + 0.13 * view))
+  cam.cy = Math.round(height * (0.5 + 0.13 * chase - 0.12 * cockpit))
+}
+
+/** How far in front of the eye a point is, after project(). Infinite in the flat view. */
+export function eyeDistance(cam) {
+  return cam.persp > 1e-7 ? cam.depth + 1 / cam.persp : Infinity
 }

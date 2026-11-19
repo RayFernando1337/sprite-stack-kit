@@ -1,0 +1,3 @@
+# `bun test` looks for test files in tests/ only, never in examples/ or the downloaded reference/.
+[test]
+root = "tests"

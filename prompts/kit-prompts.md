@@ -11,7 +11,7 @@ The agent reads `AGENTS.md` and the skills by itself, so these can be short. Say
 ```text
 Using the sprite-stack-kit skills, change the starter into a different game with the same controls:
 the craft is a red hot-air balloon, the world is a desert with mesas and a few oases, and there
-are no clouds. Keep both camera views. Run the checks and show me snapshots of both views.
+are no clouds. Keep all three camera views. Run the checks and show me a snapshot of each view.
 ```
 
 **A new object**
@@ -25,13 +25,21 @@ Follow the sprite-stack-models skill. Add a check that the boats are only ever o
 **A new view**
 
 ```text
-Add a cockpit view as a third camera view, reached with Space after the chase view. The camera
-slides into it like the other view changes. The horizon tilts when the craft banks. Draw a simple
-pixel-art instrument panel across the bottom with a working attitude indicator. Read the
-one-camera-views skill first, and use the study-the-reference skill to see how Dash's game does
-its cockpit. Write your own code and art.
+Add a fourth camera view to the starter: a map view from high above, with north at the top and
+the whole island group in sight. Space reaches it after the cockpit, and the camera slides into
+it like every other view change. The craft stays visible as a small marker. Read the
+one-camera-views skill first. Add the view to the checks and show me a snapshot of it, and one
+taken half-way through the move into it.
 ```
 
+**A new instrument**
+
+```text
+Add a radar to the cockpit in place of the air vents on the left. It shows the nearest island
+peaks as dots, turned so that ahead is up, and a ring that sweeps round once every two seconds.
+Follow the cockpit-and-hud skill. It must fit a phone-shaped frame as well as a wide one, so show
+me cockpit snapshots at 384 × 240 and at 200 × 420.
+```
 **A new game**
 
 ```text
@@ -51,7 +59,7 @@ show it, find the cause, fix it, and show me before and after frames.
 
 Paste this into a model with no repository at all. It describes what this kit's starter does.
 
-It has not been run against a model yet, so treat it as a starting point and adjust it. If you get a good result, please share your version in a pull request.
+It has not been run against a model yet, so treat it as a starting point and adjust it. The cockpit (point 7) is the newest part and the most likely to need a second round. If you get a good result, please share your version in a pull request.
 
 The order of priorities at the end follows the idea in [axu's prompt](axu-ai-pixel-fighter-spec.md). The term for the ground technique comes from [Levi's](leviwoyun-pixel-fighter.md).
 
@@ -72,7 +80,7 @@ HOW IT MUST BE BUILT
        y = cy − scale × (height + tilt × depth)
    With persp = 0 and tilt = 1 this is the flat overhead view. Raising persp gives a chase view
    from behind, with a horizon. A view change slides these numbers over about 1.2 seconds. Never
-   cut between views.
+   cut between views. Space steps through the views: overhead, chase, cockpit.
 
 3. A sprite-stacked craft. Define the craft in code as a grid of palette indices about 31 wide,
    42 long and 11 layers tall (0 is empty), mirrored left to right: delta wing, twin fins, canopy,
@@ -96,10 +104,18 @@ HOW IT MUST BE BUILT
 6. Depth. Everything drawn after the world tests the depth array, so a hill or a cloud can hide
    the craft.
 
+7. A cockpit view. A third pose of the same camera puts the eye inside the craft: the camera
+   looks at a point a fixed distance ahead of the nose, and persp is 1 ÷ that distance. The
+   craft dissolves with a dither pattern as the eye moves into it. The view banks with the
+   craft: draw the world upright onto a larger off-screen picture, then copy it into the frame
+   turned by the bank angle. Over that, draw a pixel-art cockpit made in code: a canopy frame
+   and a dashboard painted once per size, and instruments drawn every frame from the flight's
+   numbers (an attitude indicator, a heading tape, speed and height read-outs in a tiny pixel
+   font, and a horizon line on the glass that stays on the real horizon).
 HOW IT MUST FEEL
 
-- Overhead view: the craft turns to face the pointer. Chase view: point left or right to turn,
-  above the craft to climb, below it to dive. Arrow keys and WASD work too. Space switches view.
+- Overhead view: the craft turns to face the pointer. Chase and cockpit views: point left or
+  right to turn, up to climb, down to dive. Arrow keys and WASD work too.
 - A click rolls the craft. Holding the button opens the thrusters: more speed, longer flames.
 - The craft banks into turns and pitches with climbs. Every value eases toward its goal each
   frame. Nothing snaps.
@@ -112,14 +128,15 @@ RULES
 - No colour blending for fades. Use ordered dithering, and fog in about 8 steps.
 - No Math.random in the game. One seed gives the same world every time.
 - Nothing is allocated in the frame loop. Make typed arrays once and reuse them.
-- Text and buttons are DOM elements over the canvas, not pixels in the picture.
+- Hints and buttons are DOM elements over the canvas. Cockpit read-outs are pixels in the picture.
 - It runs at 60 frames per second on a laptop.
 
 IF YOU RUN SHORT OF ROOM, protect quality in this order:
   1. The renderer, the world, the craft and overhead flight
   2. The chase view and the sliding camera
   3. Clouds and shadows
-  4. Trails, flames and polish
+  4. The cockpit view: first the eye in the craft, then the banked picture, then the instruments
+  5. Trails, flames and polish
 
 Output the complete file. Do not leave placeholders.
 ```

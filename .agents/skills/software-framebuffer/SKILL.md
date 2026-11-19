@@ -1,6 +1,6 @@
 ---
 name: software-framebuffer
-description: "How the low-resolution picture works in sprite-stack-kit: the Uint32Array of packed colours, the depth array, integer upscaling with hard pixels, dithering instead of blending, and DOM overlays for text. Use when drawing anything new into the picture, adding an effect (flash, glow, vignette, screen shake), fixing blurry or misaligned pixels, handling resize or high-DPI screens, or adding a HUD, text or buttons."
+description: "How the low-resolution picture works in sprite-stack-kit: the Uint32Array of packed colours, the depth array, the order a frame is drawn in, integer upscaling with hard pixels, dithering instead of blending, and page elements over the canvas for hints and buttons. Use when drawing anything new into the picture, adding an effect (flash, glow, vignette, screen shake), fixing blurry or misaligned pixels, handling resize or high-DPI screens, or adding hints, menus or buttons to the page."
 ---
 
 # The picture
@@ -20,6 +20,8 @@ File: `examples/starter/src/framebuffer.js`. Shown by `main.js`.
 
 `resize(w, h)` allocates all four. It is the only place that allocates. `clear()` sets every colour to `EMPTY` (0) and every depth to `FAR`.
 
+A picture's `width` and `height` can be smaller than its arrays. The sheet in `roll.js` is a framebuffer that uses only part of its memory each frame. Loop over `width × height`, not over `color.length`.
+
 ## Colours
 
 - Make a colour with `rgb(r, g, b)`. It is packed as `0xAABBGGRR` with full alpha.
@@ -32,20 +34,25 @@ File: `examples/starter/src/framebuffer.js`. Shown by `main.js`.
 
 `render()` in `game.js` does this, and new drawing has to fit into it:
 
-1. `fb.clear()`.
-2. `drawWorld`: ground and clouds, near to far. It writes only where `color` is `EMPTY`, and it writes `depth`.
-3. `drawSky`: fills whatever is still `EMPTY`.
-4. Everything else (trails, sprites, particles). Each of these **tests** `depth` and overwrites `color`.
+1. Choose the picture to draw the world on, `to`. It is the frame, or the larger sheet when the view is banked (see `one-camera-views`).
+2. `to.clear()`.
+3. `drawWorld`: ground and clouds, near to far. It writes only where `color` is `EMPTY`, and it writes `depth`.
+4. `drawSky`: fills whatever is still `EMPTY`.
+5. Everything else in the world (trails, sprites, particles). Each of these **tests** `depth` and overwrites `color`.
+6. If the sheet was used, `pasteRolled` turns it into the frame.
+7. Things fixed to the screen: the cockpit, then any other display. These draw into `fb` and do not test depth.
 
-A pixel drawn in step 4 follows this pattern:
+Anything that belongs to the world goes in step 5 and draws into `to`. Anything that belongs to the screen goes in step 7 and draws into `fb`.
+
+A pixel drawn in step 5 follows this pattern:
 
 ```js
 if (project(cam, x, y, z)) {
   const px = Math.round(cam.sx)
   const py = Math.round(cam.sy)
-  if (px >= 0 && py >= 0 && px < fb.width && py < fb.height) {
-    const at = py * fb.width + px
-    if (fb.depth[at] >= cam.depth - 1) fb.color[at] = colour // not behind a hill or a cloud
+  if (px >= 0 && py >= 0 && px < to.width && py < to.height) {
+    const at = py * to.width + px
+    if (to.depth[at] >= cam.depth - 1) to.color[at] = colour // not behind a hill or a cloud
   }
 }
 ```
@@ -73,11 +80,14 @@ Pointer positions arrive in screen pixels. Divide by `pixel` before giving them 
 if (strength * 16 > BAYER4[((y & 3) << 2) | (x & 3)]) fb.color[at] = colour
 ```
 
-At half strength, half the pixels are drawn in a fixed checker-like pattern. The trails in `game.js` fade this way. Use it for smoke, spray, fades and soft edges.
+At half strength, half the pixels are drawn in a fixed checker-like pattern. The trails in `game.js` fade this way, and `drawStack` dissolves the craft this way when `pose.solid` is below 1. Use it for smoke, spray, fades and soft edges.
 
 ## Text, counters and buttons
 
-Do not draw text into the picture. It would be blocky and hard to read. Put DOM elements over the canvas, as `index.html` does with `#hint` and `#view`. Update their text only when it changes.
+There are two places for words and numbers. Choose by what they are.
+
+- **Part of the game's world or its instruments:** draw them into the picture with `paint.js`. The cockpit's read-outs are done this way, in a 3 × 5 pixel font. Use this for a score, a health bar, a speed read-out or a crosshair. The `cockpit-and-hud` skill covers it.
+- **Part of the page:** hints, menus, long text and buttons are DOM elements over the canvas, as `index.html` does with `#hint` and `#view`. They stay sharp at any size and work with touch and screen readers. Update their text only when it changes.
 
 ## Whole-picture effects
 
@@ -86,6 +96,7 @@ Run these after everything is drawn, as a loop over `fb.color`:
 - **Flash:** `mix` every pixel toward white by an amount that decays.
 - **Vignette:** precompute a per-pixel darkening table in `resize`, then apply it with `tint` logic.
 - **Screen shake:** add a small offset to `cam.cx` and `cam.cy` before drawing. Do not move the canvas.
+- **Rolling the whole view:** already built. See `roll.js` and the `one-camera-views` skill.
 - **Glow:** collect bright pixels at half size, blur, add back. Dash's `post.ts` does this. Use the `study-the-reference` skill to read it.
 
 ## Mistakes to avoid

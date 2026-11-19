@@ -1,4 +1,4 @@
-// A minimal PNG writer (RGBA, 8 bits per channel), so snapshots need no dependencies.
+// A minimal PNG writer (RGBA, 8 bits per channel), so snapshots and figures need no dependencies.
 
 import { deflateSync } from 'node:zlib'
 

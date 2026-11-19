@@ -31,8 +31,8 @@ export function drawWorld(fb, cam, world, time, caster) {
   const H = fb.height
   const color = fb.color
   const zbuf = fb.depth
-  if (skyline.length !== W) skyline = new Int32Array(W)
-  skyline.fill(H)
+  if (skyline.length < W) skyline = new Int32Array(W)
+  skyline.fill(H, 0, W)
 
   const { sin, cos, persp, tilt, zoom, cx, cy, alt } = cam
   const { heights, materials, cloudMap, palette: pal } = world
@@ -241,15 +241,17 @@ function hash(x, y) {
   return h & 255
 }
 
-/** Fills whatever the ground left empty: banded sky above the horizon, haze below it. */
-export function drawSky(fb, cam, world) {
+/**
+ * Fills whatever the ground left empty: banded sky above the horizon, haze below it. `span`
+ * is how many rows the whole sky takes, from the horizon to its darkest blue.
+ */
+export function drawSky(fb, cam, world, span = fb.height * 0.7) {
   const W = fb.width
   const H = fb.height
   const color = fb.color
   const { sky, haze } = world.palette
   const horizon = Math.min(H, Math.floor(horizonRow(cam)))
   const bands = sky.length
-  const span = H * 0.7
   for (let y = 0; y < H; y++) {
     let o = y * W
     if (y >= horizon) {

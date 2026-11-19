@@ -6,6 +6,7 @@
 // slice has no pin-holes, at any size.
 
 import { hash2 } from './rng.js'
+import { BAYER4 } from './framebuffer.js'
 
 const AX = { rx: 0, ry: 0, rz: 0, fx: 0, fy: 0, fz: 0, ux: 0, uy: 0, uz: 0 }
 const REACH = 0.53 // half a cell, plus a sliver so neighbouring tiles overlap instead of leaving seams
@@ -39,9 +40,11 @@ export function stackAxes(yaw, roll, pitch, out = AX) {
 }
 
 /**
- * pose: { x, y, z, yaw, roll, pitch, scale, spread, thrust }
+ * pose: { x, y, z, yaw, roll, pitch, scale, spread, thrust, solid }
  *   spread: how far apart the slices are drawn (1 is solid; more pulls the stack apart)
  *   thrust: 0..1, how long the engine flames are
+ *   solid:  1 draws every pixel (the default); less leaves pixels out in a dither pattern,
+ *           so the stack dissolves; 0 draws nothing
  */
 export function drawStack(fb, cam, model, pose, time) {
   const W = fb.width
@@ -51,6 +54,9 @@ export function drawStack(fb, cam, model, pose, time) {
   const mask = fb.mask
   const { sin, cos, persp, tilt, zoom, cx, cy } = cam
   const s = pose.scale
+  const solid = pose.solid ?? 1
+  if (solid <= 0) return
+  const ink = solid >= 1 ? 16 : solid * 16 // a pixel is drawn where this beats its dither threshold
   stackAxes(pose.yaw, pose.roll, pose.pitch, AX)
 
   // The craft's axes as the camera sees them, one cell long: across the screen (A), into it
@@ -148,7 +154,7 @@ export function drawStack(fb, cam, model, pose, time) {
       if (px >= 0 && py >= 0 && px < W && py < H) {
         const o = py * W + px
         if (zbuf[o] >= near) {
-          color[o] = col
+          if (ink === 16 || ink > BAYER4[((py & 3) << 2) | (px & 3)]) color[o] = col
           mask[o] = 1
         }
         if (px < minX) minX = px
@@ -178,7 +184,7 @@ export function drawStack(fb, cam, model, pose, time) {
           if (w < -REACH || w > REACH) continue
           const o = y * W + x
           if (zbuf[o] < near) continue
-          color[o] = col
+          if (ink === 16 || ink > BAYER4[((y & 3) << 2) | (x & 3)]) color[o] = col
           mask[o] = 1
         }
       }
@@ -199,7 +205,7 @@ export function drawStack(fb, cam, model, pose, time) {
       let o = y * W + minX
       for (let x = minX; x <= maxX; x++, o++) {
         if (mask[o] === 0 && (mask[o - 1] | mask[o + 1] | mask[o - W] | mask[o + W]) === 1 && zbuf[o] >= cD - 2) {
-          color[o] = model.outline
+          if (ink === 16 || ink > BAYER4[((y & 3) << 2) | (x & 3)]) color[o] = model.outline
         }
       }
     }
@@ -214,7 +220,7 @@ export function drawStack(fb, cam, model, pose, time) {
 // flickers like hand-drawn fire and is the same on every run.
 function drawFlames(fb, cam, model, pose, time, rA, rD, rZ, fA, fD, fZ, uA, uD, uZ, cA, cD, cZ) {
   const power = pose.thrust
-  if (power <= 0.02 || pose.spread > 2.5) return
+  if (power <= 0.02 || pose.spread > 2.5 || (pose.solid ?? 1) < 0.5) return
   const W = fb.width
   const H = fb.height
   const color = fb.color

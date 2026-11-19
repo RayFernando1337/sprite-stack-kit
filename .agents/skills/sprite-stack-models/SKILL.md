@@ -33,7 +33,7 @@ if ((a / wide) ** 2 + ((z - 4) / tall) ** 2 <= 1) put(a, k, z, HULL)
 
 Use ellipses for bodies, a span that grows with `k` for wings, and a short loop for fins. Later parts overwrite earlier ones.
 
-After a change, run `npm run snapshot -- --view top,chase,apart` and look. The `apart` view pulls the slices apart so you can see each one.
+After a change, run `bun run snapshot --view top,chase,apart` and look. The `apart` view pulls the slices apart so you can see each one. `docs/images/slices.png` shows the starter's slices side by side; `scripts/figures.mjs` draws it and is a short example of reading a model's layers.
 
 ## Colours
 
@@ -56,19 +56,21 @@ const model = buildModel(grid, {
 Draw it after the world and the sky:
 
 ```js
-drawStack(fb, cam, model, pose, time)
-// pose = { x, y, z, yaw, roll, pitch, scale, spread, thrust }
+drawStack(to, cam, model, pose, time)
+// pose = { x, y, z, yaw, roll, pitch, scale, spread, thrust, solid }
 ```
 
 - `yaw` 0 points north and grows clockwise. Positive `roll` dips the right side. Positive `pitch` lifts the front.
 - `spread` is 1 for a solid stack. `thrust` is 0 for no flames.
+- `solid` is 1 to draw every pixel. Lower values leave pixels out in the dither pattern, so the stack dissolves. Leave it out and it is 1.
+- `to` is the picture `render()` is drawing the world on. It is the frame, or the sheet when the view is banked.
 - Make each pose object once and update its fields. Do not create one per frame.
 
 ## Adding another object
 
 1. Make a new file, for example `boat.js`. Fill a grid, call `shadeGrid(grid, size)`, then `buildModel`.
 2. In `game.js`, build the model once in `createGame` and keep one pose object for each copy.
-3. In `render()`, call `drawStack` for each one after `drawSky`.
+3. In `render()`, call `drawStack(to, …)` for each one after `drawSky` and before `pasteRolled`.
 4. If objects can overlap, draw the farther one first. `project(cam, x, y, z)` sets `cam.depth`, which you can sort by.
 
 A model that sits on the ground gets `z` from `groundAt(world, x, y)`. A model on the sea uses `z = 0` plus a little.
@@ -85,7 +87,7 @@ Use this when a model comes from somewhere other than code: paste the string int
 
 A stack can be drawn by hand: one small image per slice, in any pixel editor. A stack can also be cut from top, side and front drawings of the object: a cell is filled when all three drawings are filled there.
 
-To bring art in, write a one-off Node script that reads the images, fills a grid, and prints `encodeGrid(grid)`. Keep the script out of the game. `scripts/lib/png.mjs` writes PNG files; it does not read them, so the script needs its own reader.
+To bring art in, write a one-off script for Bun that reads the images, fills a grid, and prints `encodeGrid(grid)`. Keep the script out of the game. `scripts/lib/png.mjs` writes PNG files; it does not read them, so the script needs its own reader.
 
 ## How drawing works
 
@@ -100,4 +102,5 @@ To bring art in, write a one-off Node script that reads the images, fills a grid
 - **A hollow that shows.** Bodies should be filled, not shells. Wings one layer thick are fine.
 - **Wrong pivot.** `pivotK` and `pivotZ` should be near the model's centre of mass, or it will swing when it turns.
 - **Looking exactly side-on.** Slices are flat, so a stack seen from eye level thins out. Keep cameras above about 10 degrees, or use more slices.
+- **A stack right in front of the eye.** In the cockpit view another object can come very close. Fade it with `solid` by its `eyeDistance`, as `settle()` in `game.js` does for the craft.
 - **Changing `REACH` in `stack.js`.** Lower values open seams between tiles.
