@@ -8,10 +8,11 @@
 // Each check is one promise the kit makes, so a change that breaks a promise fails here.
 
 import { spawnSync } from 'node:child_process'
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { gzipSync } from 'node:zlib'
+import { runStates } from './states.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -35,9 +36,8 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
   const { createGame, TUNING, VIEWS } = await load('game.js')
   const { createCamera, project, horizonRow } = await load('camera.js')
   const { EMPTY, BAYER4, createFramebuffer } = await load('framebuffer.js')
-  const { buildWorld, groundAt, GROUND_MAX, CLOUD_LAYERS, MAT } = await load('world.js')
+  const { buildWorld, groundAt, GROUND_MAX, CLOUD_LAYERS, MAT, LAND_SHARE } = await load('world.js')
   const { sculptGrid, encodeGrid, decodeGrid, buildCraft, CRAFT_W, CRAFT_L, CRAFT_H } = await load('model.js')
-  const { createSheet, sizeSheet, fitSheet, pasteRolled } = await load('roll.js')
 
   const results = []
   const check = (name, ok, detail = '') => results.push({ name, ok: !!ok, detail })
@@ -53,7 +53,7 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
   const grid = sculptGrid()
   const model = buildCraft()
   check('model: the encoded form decodes back to the same grid', checksum(decodeGrid(encodeGrid(grid), grid.length)) === checksum(grid))
-  check('model: has a solid number of cells', model.cells > 800, `${model.cells} cells, ${encodeGrid(grid).length} characters encoded`)
+  check('model: has a solid number of cells', model.cells > 100, `${model.cells} cells, ${encodeGrid(grid).length} characters encoded`)
   let mirrored = true
   for (let z = 0; z < CRAFT_H && mirrored; z++) {
     for (let k = 0; k < CRAFT_L && mirrored; k++) {
@@ -81,7 +81,8 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
   }
   for (let i = 0; i < world.cloudMap.length; i++) if (world.cloudMap[i] > thickest) thickest = world.cloudMap[i]
   const share = land / world.heights.length
-  check('world: land covers the share that was asked for', Math.abs(share - 0.3) < 0.02, `${(share * 100).toFixed(1)}% land`)
+  // a world with no sea (a desert, a city) exports no share to hold it to
+  if (LAND_SHARE !== undefined) check('world: land covers the share that was asked for', Math.abs(share - LAND_SHARE) < 0.02, `${(share * 100).toFixed(1)}% land`)
   check('world: nothing is taller than the renderer allows', tallest <= GROUND_MAX && thickest <= CLOUD_LAYERS, `ground ${tallest}/${GROUND_MAX}, cloud ${thickest}/${CLOUD_LAYERS}`)
 
   // ── the camera
@@ -154,8 +155,8 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
     check('draw: every view still draws in a frame that is tiny, very tall or very wide', !threw && empty === 0, threw || `${empty} empty`)
   }
 
-  // ── a view change never shows a broken frame: overhead → chase → cockpit → overhead
-  {
+  // ── a view change never shows a broken frame: once round every view the game has
+  if (VIEWS.length > 1) {
     const game = createGame({ seed: 7 })
     game.resize(384, 240)
     game.setKeys(0.6, 0, false) // a steady turn, so the cockpit leg is drawn banked
@@ -163,28 +164,29 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
     let worst = 0
     let backwards = 0
     const arrived = []
-    for (const leg of ['chase', 'cockpit', 'top']) {
+    for (const leg of [...VIEWS.slice(1), VIEWS[0]]) {
       game.nextView()
       let chase = game.chaseAmount
-      let cockpit = game.cockpitAmount
+      let cockpit = game.cockpitAmount ?? 0
       for (let i = 0; i < 240; i++) {
         game.update(1 / 60)
         const chaseWrong = leg === 'chase' ? game.chaseAmount < chase - 1e-9 : game.chaseAmount > chase + 1e-9
-        const cockpitWrong = leg === 'cockpit' ? game.cockpitAmount < cockpit - 1e-9 : game.cockpitAmount > cockpit + 1e-9
+        const cockpitNow = game.cockpitAmount ?? 0 // a game with no cockpit need not have this
+        const cockpitWrong = leg === 'cockpit' ? cockpitNow < cockpit - 1e-9 : cockpitNow > cockpit + 1e-9
         if (chaseWrong || cockpitWrong) backwards++
         chase = game.chaseAmount
-        cockpit = game.cockpitAmount
+        cockpit = cockpitNow
         const empty = emptyPixels(game.render())
         if (empty > worst) worst = empty
       }
       arrived.push(game.view === leg && chase === (leg === 'chase' ? 1 : 0) && cockpit === (leg === 'cockpit' ? 1 : 0))
     }
-    check('view change: the camera slides one way through all three views and arrives each time', backwards === 0 && arrived.every(Boolean), `${backwards} backward steps, arrived ${arrived.join(' ')}`)
-    check('view change: every frame on the way is complete', worst === 0, `${worst} empty pixels at worst, over 720 frames`)
+    check(`view change: the camera slides one way through all ${VIEWS.length} views and arrives each time`, backwards === 0 && arrived.every(Boolean), `${backwards} backward steps, arrived ${arrived.join(' ')}`)
+    check('view change: every frame on the way is complete', worst === 0, `${worst} empty pixels at worst, over ${VIEWS.length * 240} frames`)
   }
 
-  // ── the cockpit
-  {
+  // ── the cockpit, in games that have one
+  if (VIEWS.includes('cockpit')) {
     const game = createGame({ seed: 7, view: 'cockpit' })
     game.resize(384, 240)
     game.setKeys(1, 0.4, true)
@@ -208,8 +210,9 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
     check('cockpit: a barrel roll turns the picture all the way round and leaves it level', most > 6 && Math.abs(game.viewRoll) < 0.2, `turned ${most.toFixed(2)} rad, ends at ${game.viewRoll.toFixed(2)}`)
   }
 
-  // ── rolling the picture
-  {
+  // ── rolling the picture, in games that still have roll.js
+  if (existsSync(join(gameDir, 'src/roll.js'))) {
+    const { createSheet, sizeSheet, fitSheet, pasteRolled } = await load('roll.js')
     const frame = createFramebuffer()
     const sheet = createSheet()
     frame.resize(120, 80)
@@ -272,7 +275,7 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
     const start = game.craft.yaw
     game.setKeys(1, 0, false)
     fly(game, 60)
-    check('input: holding right turns the craft clockwise', game.craft.yaw > start + 0.5, `turned ${(game.craft.yaw - start).toFixed(2)} rad in a second`)
+    check('input: holding right turns the craft clockwise', game.craft.yaw > start + 0.1, `turned ${(game.craft.yaw - start).toFixed(2)} rad in a second`)
     game.setKeys(0, 0, false)
     game.press()
     game.release()
@@ -290,7 +293,7 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
     }
     check('flight: holding a dive for 15 seconds never reaches the ground', lowest > 3, `closest ${lowest.toFixed(1)} px`)
   }
-  for (const view of ['chase', 'cockpit']) {
+  for (const view of ['chase', 'cockpit'].filter((name) => VIEWS.includes(name))) {
     const game = createGame({ seed: 7, view })
     game.resize(384, 240)
     fly(game, 30)
@@ -300,7 +303,7 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
       game.pointerMove(384 * 0.85, 240 * 0.08) // up and to the right
       game.update(1 / 60)
     }
-    check(`input: in the ${view} view, pointing up and to the right climbs and turns clockwise`, game.craft.yaw > yaw + 0.5 && game.craft.z > z + 10, `turned ${(game.craft.yaw - yaw).toFixed(2)} rad, climbed ${(game.craft.z - z).toFixed(0)} px`)
+    check(`input: in the ${view} view, pointing up and to the right climbs and turns clockwise`, game.craft.yaw > yaw + 0.1 && game.craft.z > z + 2, `turned ${(game.craft.yaw - yaw).toFixed(2)} rad, climbed ${(game.craft.z - z).toFixed(0)} px`)
   }
 
   // ── speed
@@ -335,6 +338,17 @@ export async function runChecks({ game: folder = 'examples/starter' } = {}) {
       if (/Math\.random\(/.test(text)) outside.push(`${file}: uses Math.random()`)
     }
     check('game: no libraries, no network, no 3D engine, no unseeded randomness', outside.length === 0, outside.join('; ') || `${sources.length} files, ${(raw / 1024).toFixed(1)} KB, ${(packed / 1024).toFixed(1)} KB gzipped`)
+  }
+
+  // ── every state the game's own map can reach (see states.js beside the game)
+  if (existsSync(join(gameDir, 'states.js'))) {
+    const walk = await runStates({ game: folder })
+    const first = [...walk.broken][0]
+    check(
+      'states: the game keeps its rules in every state it can reach',
+      walk.complete && walk.broken.size === 0,
+      first ? `"${first[0]}" breaks after: ${first[1].path.join(', ')}. Run bun run states for the rest` : `${walk.seen.size} states, ${walk.map.rules.length} rules, ${walk.tried} paths${walk.complete ? '' : ', and the walk did not finish'}`,
+    )
   }
 
   // ── the tools

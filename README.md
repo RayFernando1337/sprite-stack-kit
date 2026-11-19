@@ -6,6 +6,14 @@ Build pixel-art games that look 3D, with no 3D engine.
 
 Every pixel in those three pictures was worked out by plain JavaScript. There are no polygons, no graphics library and no image files. This kit explains how that is done, and gives you a working game to take apart and make your own.
 
+## Make a game with your agent
+
+Install [Bun](https://bun.sh), clone this repository, open the folder in your coding agent, and say:
+
+> Read START.md and follow it. I want to make a game.
+
+[START.md](START.md) takes it from there. Your agent asks you six questions about the game, its look and its limits, writes down what you agreed, and builds in small steps that it checks as it goes. It works with any agent that can read files and run commands: Claude Code, Codex, Cursor, Droid and others.
+
 ## What you get
 
 - **A game to fork.** [`examples/starter`](examples/starter/README.md) is a small flight game with three camera views: from above, from behind, and from the cockpit. It is about 2,500 lines of commented JavaScript, with no libraries and no build step.
@@ -51,7 +59,7 @@ Add `?seed=3` to the address for a different world. Add `?view=chase` or `?view=
 | Change the game with your own hands, one small step at a time | [docs/tutorial.md](docs/tutorial.md) |
 | Understand the maths and the code properly | [docs/deep-dive.md](docs/deep-dive.md) |
 | Look up a word | [docs/glossary.md](docs/glossary.md) |
-| Build with a coding agent | [Build your own game](#build-your-own-game), below |
+| Have a coding agent build your game | [START.md](START.md) |
 | Build a game from a single prompt | [prompts/](prompts/README.md) |
 | Read and run Dash's original | [docs/getting-the-source.md](docs/getting-the-source.md) |
 
@@ -70,7 +78,7 @@ Add `?seed=3` to the address for a different world. Add `?view=chase` or `?view=
 
 ## Build your own game
 
-**With a coding agent.** Open this folder in your agent. It reads [AGENTS.md](AGENTS.md) and the skills by itself. Then say what you want to see, for example:
+**With a coding agent.** For a whole game, start with [START.md](START.md). For a single change, open this folder in your agent and say what you want to see, for example:
 
 - "Turn the craft into a hot-air balloon and make the islands a desert."
 - "Add enemy boats that I can shoot."
@@ -86,7 +94,8 @@ Add `?seed=3` to the address for a different world. Add `?view=chase` or `?view=
 ## Check your changes
 
 ```sh
-bun run check      # runs the game with no browser and checks 41 things the kit promises
+bun run check      # runs the game with no browser and checks 42 things the kit promises
+bun run states     # walks the game through every state it can reach and checks its rules
 bun run snapshot   # saves frames to snapshots/ so you (or your agent) can look at them
 bun test           # the same checks, through Bun's test runner
 ```
@@ -115,11 +124,12 @@ It is a base, not a finished game.
 
 | Path | What it is |
 | --- | --- |
-| `examples/starter/` | The game to fork: 13 files, 99 KB with comments, 37 KB gzipped |
+| `START.md` | The entry point for making a game with a coding agent |
+| `examples/starter/` | The game to fork: 13 files, 99 KB with comments, 37 KB gzipped, plus its state map |
 | `docs/` | The picture tour, the tutorial, the deeper look, the glossary, and how to get and read the original |
 | `.agents/skills/` | Skills for coding agents, one folder each. They are plain how-to guides, so people can read them too |
 | `prompts/` | Prompts for building games like this, with credit |
-| `scripts/` | The local server, the checks, the snapshot tool, the figure maker and the reference downloader |
+| `scripts/` | The local server, the checks, the state walker, the snapshot tool, the figure maker and the reference downloader |
 | `tests/` | Lets `bun test` run the checks |
 | `reference/` | Created by `bun run fetch-reference`. Git-ignored and never committed |
 
@@ -131,6 +141,7 @@ This kit stands on other people's work. The short version:
 - **Levi 卧云** ([@Leviwoyun](https://x.com/Leviwoyun)) and **阿旭gogogo** ([@axu_ai](https://x.com/axu_ai)) shared the prompts they used to recreate it.
 - **Del** ([@TheCartelDel](https://x.com/TheCartelDel)) gave the explanation, "sprite stacking", that most people learned the name from, in a thread started by **/OVRFLW** ([@overflowyouknow](https://x.com/overflowyouknow)).
 - **Dilip** ([@dilip_ramirez](https://x.com/dilip_ramirez)) ported it to an ESP32-S3.
+- **Lauren Tan** ([@poteto](https://x.com/poteto)) wrote [pstack](https://github.com/cursor/plugins/tree/main/pstack), whose ideas about how agents should verify their work shaped `START.md` and the state walker.
 
 [CREDITS.md](CREDITS.md) has everyone, with links to their posts. If you build something with this kit, please credit Dash too.
 

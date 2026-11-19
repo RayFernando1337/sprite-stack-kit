@@ -6,13 +6,13 @@
 //   bun run snapshot --view cockpit --seed 3
 //   bun run snapshot --seconds 6 --width 480 --height 270 --scale 3
 //   bun run snapshot --turn 1 --boost                 # hold a right turn with the thrusters open
-//   bun run snapshot --game examples/boats            # a copy of the starter
+//   bun run snapshot --game examples/boats            # a copy: the views it has, as boats-<view>-seed7.png
 //
-// Views: top, chase, cockpit, between (half-way from overhead to chase), entering (half-way
+// Views: top, chase, cockpit, between (half-way from the first view to the next), entering (half-way
 // from chase into the cockpit), apart (slices pulled apart).
 
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { encodePng } from './lib/png.mjs'
 
@@ -31,11 +31,27 @@ const turn = Number(flag('turn', 0))
 const climb = Number(flag('climb', 0))
 const boost = args.includes('--boost')
 const out = resolve(root, flag('out', 'snapshots'))
-const views = flag('view', 'top,chase,cockpit,between,entering,apart').split(',')
-const { createGame } = await import(pathToFileURL(resolve(root, flag('game', 'examples/starter'), 'src/game.js')).href)
+const folder = flag('game', 'examples/starter')
+const { createGame, VIEWS } = await import(pathToFileURL(resolve(root, folder, 'src/game.js')).href)
 
-// the view each picture starts in
+// the view each picture starts in, and what the game must have for the picture to exist
 const START = { chase: 'chase', cockpit: 'cockpit', entering: 'chase' }
+const has = {
+  top: true,
+  chase: VIEWS.includes('chase'),
+  cockpit: VIEWS.includes('cockpit'),
+  between: VIEWS.length > 1,
+  entering: VIEWS.includes('chase') && VIEWS.includes('cockpit'),
+  apart: typeof createGame({ seed }).toggleSpread === 'function',
+}
+const views = flag('view', Object.keys(has).filter((name) => has[name]).join(',')).split(',')
+const missing = views.filter((name) => !has[name])
+if (missing.length) {
+  console.error(`${folder} has no ${missing.join(' or ')} picture. It has: ${Object.keys(has).filter((name) => has[name]).join(', ')}`)
+  process.exit(1)
+}
+// a copy's frames get the copy's name, so they do not replace the starter's
+const prefix = folder.replace(/\/+$/, '').endsWith('examples/starter') ? '' : `${basename(resolve(root, folder))}-`
 
 mkdirSync(out, { recursive: true })
 for (const view of views) {
@@ -50,7 +66,7 @@ for (const view of views) {
     game.update(1 / 60)
   }
   const frame = game.render()
-  const file = join(out, `${view}-seed${seed}.png`)
+  const file = join(out, `${prefix}${view}-seed${seed}.png`)
   writeFileSync(file, encodePng(frame.bytes, frame.width, frame.height, scale))
   console.log(file)
 }

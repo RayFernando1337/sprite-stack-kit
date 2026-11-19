@@ -25,6 +25,8 @@ Run it from the repository root with `bun start`.
 
 `index.html` is the page itself: one canvas, a VIEW button and a line of hints.
 
+`states.js` is not part of the game. It is the game's state map: what the player can do, the states the game can be in, and the rules that must hold in all of them. `bun run states` walks every one.
+
 ## Four quick experiments
 
 1. In `src/game.js`, change `chaseAngle` from `15` to `30`. The chase camera now looks down more steeply.

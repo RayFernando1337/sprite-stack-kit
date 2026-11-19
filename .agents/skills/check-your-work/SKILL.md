@@ -32,11 +32,20 @@ They run the game with no browser and take a few seconds. They check that:
 - a held dive never reaches the ground
 - a frame fits easily in a sixtieth of a second, in every view
 - the game uses no libraries, no network, no WebGL and no `Math.random()`
+- the game keeps the rules in its state map in every state it can reach
 - the local server serves the folder it is given
 
 If a check fails, fix the cause. Do not loosen the check unless the promise itself has changed, and say so if it has.
 
-## 2. Look at frames
+## 2. Walk every state
+
+```sh
+bun run states
+```
+
+This tries every order of the player's steps on the real game and checks the rules in the game's `states.js`. Run it after any change to views, modes, input or anything else with states. `bun run check` runs it too, as one line. The `verify-states` skill explains the map and how to add to it.
+
+## 3. Look at frames
 
 ```sh
 bun run snapshot
@@ -70,7 +79,7 @@ What to look for:
 
 Take frames at more than one seed and with a turn held. One good frame proves little.
 
-## 3. Try it in a browser
+## 4. Try it in a browser
 
 Do this when you changed input, the page, or anything that depends on timing.
 
@@ -82,13 +91,13 @@ Open the address it prints and try: steering with the pointer in all three views
 
 If you drive a browser from a tool, keep the tab visible. A hidden tab slows its animation to a crawl, and the game will seem stuck.
 
-## 4. Measure speed when you touch drawing
+## 5. Measure speed when you touch drawing
 
 `bun run check` prints milliseconds per frame for each view. Compare before and after your change. A frame has 16.6 milliseconds at 60 frames per second, and slow phones need a wide margin. If your change doubles the time, find out why before going on.
 
 Common causes: allocating inside the loop, a per-pixel function call that could be a table, repainting something every frame that could be painted once, or a larger picture.
 
-## 5. Add a check for a new promise
+## 6. Add a check for a new promise
 
 When you add a feature that must keep working, add a check inside `runChecks()` in `scripts/check.mjs`:
 
@@ -105,7 +114,7 @@ When you add a feature that must keep working, add a check inside `runChecks()` 
 
 Then make sure the check can fail. Break the feature on purpose, see the check fail, and put the feature back. A check that cannot fail protects nothing.
 
-## 6. Redraw the figures when drawing changes
+## 7. Redraw the figures when drawing changes
 
 The pictures in `docs/` are drawn by the game's own code. If you changed what the starter draws, run:
 

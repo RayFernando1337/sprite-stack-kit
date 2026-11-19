@@ -5,6 +5,8 @@ description: "Build or extend a pixel-art game that looks 3D with no 3D engine, 
 
 # Building a game with sprite-stack-kit
 
+If the user wants a whole game made, follow `START.md` at the top of the repository. It has the questions to ask and the order to build in.
+
 ## The idea
 
 The whole game is drawn by plain JavaScript into one small picture, about 400 × 240 pixels, which the page shows scaled up with hard edges. Objects are **sprite stacks**: piles of flat pixel slices, one per layer of height. The ground is a height map drawn as stacked columns from near to far. One short camera formula gives a flat overhead view, a view from behind and a view from the cockpit.
@@ -44,7 +46,7 @@ All paths are in `examples/starter/src`.
 
 1. Pick the smallest change that will be visible.
 2. Make it.
-3. Run `bun run check`.
+3. Run `bun run check`. For anything with states or modes, add it to the game's `states.js` first and run `bun run states` (`verify-states` skill).
 4. Run `bun run snapshot` and look at the PNG files in `snapshots/`. Do not skip this when you change drawing. A frame can pass every check and still look wrong.
 5. If you changed input, run `bun start` and try it in a browser.
 
@@ -52,7 +54,7 @@ The `check-your-work` skill has the details.
 
 ## Three kinds of request
 
-**Reskin: "make it a dragon over a desert".** Change the shape in `sculpt()` and the colours in `CRAFT_PALETTE` (`model.js`). Change `MATERIALS` and the land rules in `buildWorld()` (`world.js`). Adjust `TUNING` (`game.js`). Nothing else needs to change.
+**Reskin: "make it a dragon over a desert".** Change the shape in `sculpt()` and the colours in `CRAFT_PALETTE` (`model.js`). Change `MATERIALS` and the land rules in `buildWorld()` (`world.js`). Adjust `TUNING` (`game.js`). If the new world has no sea, or the new craft has no wings, see "What the tools need from a game" below.
 
 **New feature: "add enemies", "add a radar to the cockpit", "add sound".** Read the matching skill. Put the feature in its own file and call it from `game.js`. If Dash's game has the feature, the `study-the-reference` skill tells you where to read how he did it.
 
@@ -65,8 +67,27 @@ bun run check --game examples/boats
 bun run snapshot --game examples/boats
 ```
 
-The checks and the snapshot tool work on a copy as long as it keeps the starter's file names and the functions they export.
+The checks and the snapshot tool work on a copy as long as it keeps the starter's file names and the names in the next section.
 
+## What the tools need from a game
+
+`bun run check`, `bun run states` and `bun run snapshot` drive a copy through the starter's names. Keep these, with whatever meaning suits the game. A balloon's hold can light a burner; its click can be a slow twirl.
+
+| File | Keep |
+| --- | --- |
+| `game.js` | `createGame`, `VIEWS`, `TUNING`. On the game: `update`, `render`, `resize`, `setKeys`, `pointerMove`, `press`, `release`, `roll`, `nextView`, `view`, `chaseAmount`, `boost`, `world`, `model`, `camera`, and `craft` with `x`, `y`, `z`, `yaw`, `spin` |
+| `world.js` | `buildWorld`, `groundAt`, `GROUND_MAX`, `CLOUD_LAYERS`, `MAT` |
+| `model.js` | `sculptGrid`, `encodeGrid`, `decodeGrid`, `buildCraft`, `CRAFT_W`, `CRAFT_L`, `CRAFT_H`. The model is the same left and right, and has an `outline` colour |
+| `camera.js`, `framebuffer.js` | As they are |
+
+The checks also expect this behaviour: the right key turns the craft clockwise, pointing up climbs, a click sets `craft.spin` to 0, a hold lifts `boost` above 0.6, and a held dive never reaches the ground. How fast any of it happens is the game's own tuning.
+
+What a game may delete:
+
+- **No cockpit.** Take `'cockpit'` out of `VIEWS`. Then `cockpit.js`, `roll.js`, `cockpitAmount`, `viewRoll` and the code that uses them can go. So can the rules in `states.js` that name the cockpit.
+- **No sea.** Take `LAND_SHARE` out of `world.js`, and the check on it is skipped. `terrain.js` and the spawn code in `world.js` use `MAT.SEA`, `MAT.SHALLOW`, `MAT.SURF` and `WATER_BELOW` by name, so change those lines too.
+- **No trails or flames.** Leave `wingtips` or `nozzles` out of the model.
+- **No pulling the stack apart.** Delete `toggleSpread`, its key, and its step in `states.js`.
 ## What fits this approach
 
 It suits anything seen from above, from behind or from a driver's seat over a landscape: flying, sailing, hovering, racing across terrain, a top-down adventure, a city flyover.

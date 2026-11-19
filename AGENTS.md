@@ -8,16 +8,21 @@ sprite-stack-kit helps people build pixel-art games that look 3D without a 3D en
 
 The approach comes from "fighter", a game by Dash (@creativedash). His code is not in this repository. See `CREDITS.md`.
 
+## If the user wants a game made
+
+Follow `START.md`. It has the questions to ask, the brief to write and the order to build in.
+
 ## Commands
 
 This project uses [Bun](https://bun.sh). Do not use npm, npx, yarn or pnpm, and do not add a lockfile or dependencies.
 
 | Command | What it does |
 | --- | --- |
-| `bun start` | Serves `examples/starter` at `http://localhost:5173` (or the next free port) |
+| `bun start` | Serves `examples/starter` at `http://localhost:5173` (or the next free port). For another game: `bun scripts/serve.mjs examples/my-game` |
 | `bun run check` | Runs the starter with no browser and checks what the kit promises. Takes a few seconds |
+| `bun run states` | Walks the game through every state its map (`states.js`) can reach and checks the map's rules. About two seconds |
 | `bun test` | The same checks, through Bun's test runner (`tests/kit.test.js`) |
-| `bun run snapshot` | Saves frames as PNG files in `snapshots/` so you can look at what the game draws |
+| `bun run snapshot` | Saves frames as PNG files in `snapshots/` so you can look at what the game draws. A copy's files start with its folder name |
 | `bun run figures` | Redraws the pictures in `docs/images/` from the game's own code |
 | `bun run fetch-reference` | Downloads Dash's published build into `reference/` (git-ignored). Needs the network |
 | `bun run reference` | Serves that downloaded copy so it can be played locally |
@@ -43,11 +48,12 @@ examples/starter/        the game to fork
   src/cockpit.js         the cockpit: painted layers, live instruments, head-up display
   src/paint.js           dots, boxes, lines, discs and a 3 × 5 pixel font
   src/rng.js             seeded random numbers and tileable noise
+  states.js              the state map: the player's steps, the states, and the rules that must hold
 .agents/skills/          one folder per skill, each with a SKILL.md
 docs/                    how it works, tutorial, deeper look, glossary, the original's source
 docs/images/             figures, drawn by `bun run figures`; do not edit by hand
 prompts/                 prompts for building games like this, with credit
-scripts/                 serve, check, snapshot, figures, fetch-reference
+scripts/                 serve, check, states, snapshot, figures, fetch-reference
 tests/                   lets `bun test` run the checks
 reference/               downloaded third-party code; git-ignored; may not exist
 ```
@@ -66,6 +72,7 @@ Read the skill that matches the task before you change code.
 | `cockpit-and-hud` | Changing the cockpit, adding an instrument, a score or any display drawn in the picture |
 | `game-feel` | Controls, motion, trails, flames, particles, sound |
 | `study-the-reference` | Finding out how Dash's game does something |
+| `verify-states` | Adding anything with states or modes; a bug that needs a certain order of actions |
 | `check-your-work` | Before you say a change is done |
 
 ## Rules
@@ -77,7 +84,7 @@ Read the skill that matches the task before you change code.
 5. **Never commit `reference/`, and never copy from it.** You may read it to learn how something is done. Write your own code, shapes, colours and sounds. If a technique comes from Dash's build, say so in `CREDITS.md`.
 6. **Do not edit other people's prompts.** The original text in `prompts/` stays exactly as its author wrote it.
 7. **Credit people.** If you add someone's idea or prompt, add them to `CREDITS.md` with a link.
-8. **Check before you finish.** Run `bun run check`. If you changed what is drawn, run `bun run snapshot` and look at the frames, then run `bun run figures` so the documents' pictures match. Follow the `check-your-work` skill.
+8. **Check before you finish.** Run `bun run check`. If you added a state, a mode or a rule the game must keep, put it in the game's `states.js` first and run `bun run states`. Never loosen a check or a rule to get a pass. If you changed what is drawn, run `bun run snapshot` and look at the frames, then run `bun run figures` so the documents' pictures match. Follow the `check-your-work` skill.
 
 ## Code style
 

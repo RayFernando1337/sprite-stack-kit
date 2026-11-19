@@ -11,6 +11,7 @@
   "scripts": {
     "start": "bun scripts/serve.mjs examples/starter",
     "check": "bun scripts/check.mjs",
+    "states": "bun scripts/states.mjs",
     "snapshot": "bun scripts/snapshot.mjs",
     "figures": "bun scripts/figures.mjs",
     "fetch-reference": "bun scripts/fetch-reference.mjs",

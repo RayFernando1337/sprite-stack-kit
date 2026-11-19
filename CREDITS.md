@@ -63,6 +63,16 @@ Other replies shaped how [`docs/how-it-works.md`](docs/how-it-works.md) is writt
 
 **Dilip** · [@dilip_ramirez](https://x.com/dilip_ramirez) [ported the game to an ESP32-S3](https://x.com/dilip_ramirez/status/2122108951521357895) microcontroller the day it was posted, and said a video would follow. When he publishes the port, a link belongs here.
 
+## How agents work in this kit
+
+**Lauren Tan** · [@poteto](https://x.com/poteto) · wrote [pstack](https://github.com/cursor/plugins/tree/main/pstack), the set of agent skills she uses at Cursor. This kit takes these ideas from it, and none of its text or code:
+
+- one entry point that routes the work (`START.md`)
+- find out what you can from the repository, and ask the person only what you cannot observe
+- write down states and rules, check every path, and report a broken rule as the shortest path in the reader's words (`scripts/states.mjs`, after pstack's formal verification and statechart skills, which use TLA+)
+- a check must be seen to fail before it is trusted, and a rule is never weakened to get a pass
+- work in small units that each end in a check, and prefer taking away to adding
+
 ## Tools and older ideas
 
 - [UI8 Forge](https://ui8.ai/forge) hosts Dash's game and serves the public build that `scripts/fetch-reference.mjs` downloads.

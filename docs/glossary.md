@@ -104,6 +104,8 @@ The words this kit uses, in plain language. Where a word names something in the 
 
 **`dt`.** The seconds since the last frame. Motion is multiplied by it so the game runs at the same speed on every screen.
 
+**State map.** A file beside a game, `states.js`, that lists what the player can do, the states the game can be in, and the rules that must hold in every one. `bun run states` walks all of it on the real game.
+
 **Pool, ring.** A fixed array used for things that come and go, such as trail points. When it is full, the oldest entry is overwritten. Nothing is created or freed.
 
 ## The cockpit

@@ -62,7 +62,9 @@ function glide(part, goal, pull, dt) {
 }
 
 export function createGame(options = {}) {
-  const world = buildWorld(options.seed ?? 7, options.world)
+  // `world` is how much land and cloud to make, or a world that is already built: tools that
+  // start many games on one seed pass the first game's world to the rest.
+  const world = options.world?.heights ? options.world : buildWorld(options.seed ?? 7, options.world)
   const model = buildCraft()
   const tune = { ...TUNING, ...options.tuning, craftWidth: model.width }
   const fadeFar = Math.min(FADE_FAR, tune.chaseDistance * FADE_SHARE)
@@ -314,7 +316,7 @@ export function createGame(options = {}) {
     if (moved > TRAIL_GAP * TRAIL_GAP) {
       trailX = craft.x
       trailY = craft.y
-      for (let side = 0; side < 2; side++) {
+      for (let side = 0; side < model.wingtips.length && side < 2; side++) {
         wingtip(side)
         const o = trailHead * 4
         trails[side][o] = tip.x
@@ -334,7 +336,7 @@ export function createGame(options = {}) {
     const color = to.color
     const zbuf = to.depth
     const tones = world.palette.trail
-    for (let side = 0; side < 2; side++) {
+    for (let side = 0; side < model.wingtips.length && side < 2; side++) {
       const points = trails[side]
       wingtip(side)
       let joined = project(cam, tip.x, tip.y, tip.z) && eyeDistance(cam) >= fadeNear
@@ -502,6 +504,10 @@ export function createGame(options = {}) {
     /** radians: how far the picture is banked right now */
     get viewRoll() {
       return viewRoll
+    },
+    /** 1 when the stack is solid, up to 4 when its slices are pulled apart */
+    get spread() {
+      return spread
     },
     get time() {
       return time

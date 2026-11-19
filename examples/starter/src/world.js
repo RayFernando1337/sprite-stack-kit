@@ -90,11 +90,14 @@ function buildPalette() {
   return pal
 }
 
+/** How much of the map is above water, unless a game asks for something else. */
+export const LAND_SHARE = 0.3
+
 /**
  * Builds the world for a seed. `land` is the share of the map that is above water (0..1) and
  * `clouds` is how much cloud there is (0..1).
  */
-export function buildWorld(seed = 7, { land = 0.3, clouds = 0.5 } = {}) {
+export function buildWorld(seed = 7, { land = LAND_SHARE, clouds = 0.5 } = {}) {
   const rng = makeRng((seed | 0) * 7919 + 17)
   const heights = new Uint8Array(WORLD_SIZE * WORLD_SIZE)
   const materials = new Uint8Array(WORLD_SIZE * WORLD_SIZE)

@@ -1,6 +1,8 @@
 # The documents
 
-If you are new to this, read the first three in order. Each one goes a step deeper than the one before.
+To have a coding agent build a game for you, start with [START.md](../START.md) at the top of the repository.
+
+If you are new to this and want to understand it, read the first three in order. Each one goes a step deeper than the one before.
 
 | | Document | What it gives you |
 | --- | --- | --- |
@@ -36,6 +38,7 @@ The folders in [`.agents/skills`](../.agents/skills) are written for coding agen
 | Change the cockpit, or add a dial, a screen, a score or a health bar | [cockpit-and-hud](../.agents/skills/cockpit-and-hud/SKILL.md) |
 | Tune the controls, or add particles, enemies or sound | [game-feel](../.agents/skills/game-feel/SKILL.md) |
 | Find out how Dash's game does something | [study-the-reference](../.agents/skills/study-the-reference/SKILL.md) |
+| Check a feature in every state the game can reach | [verify-states](../.agents/skills/verify-states/SKILL.md) |
 | Make sure a change really works | [check-your-work](../.agents/skills/check-your-work/SKILL.md) |
 
 ## The pictures
