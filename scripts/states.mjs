@@ -54,6 +54,7 @@ export async function runStates({ game: folder = 'examples/starter', depth = 12 
       const step = path[n]
       const last = n === path.length - 1
       const count = map.waits[step] ?? 1
+      if (map.before) map.before(game, notes) // lets a rule compare the game with how it was before the step
       if (map.events[step]) map.events[step](game, notes)
       for (let i = 0; i < count; i++) {
         game.update(dt)

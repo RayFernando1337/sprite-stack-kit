@@ -1,102 +1,63 @@
 ---
 name: sprite-stack-game
-description: "Build or extend a pixel-art game that looks 3D with no 3D engine, using sprite stacking on a hand-written software renderer. Use when the user asks for a game like the pixel fighter jet demo, mentions sprite stacking, 'no polygons' or 'no 3D engine', wants to fork or reskin the starter in examples/starter, or wants a new game in this style (flight, boats, racing, a top-down adventure). Read this first: it gives the rules, the file map, the working loop, and which other skill covers each kind of change."
+description: "The entry point for any work in sprite-stack-kit: pixel-art games that look 3D with no 3D engine, made of sprite stacks on a hand-written software renderer. Matches the request to a playbook (new game, feature, reskin, bug fix, learn) and names the skill for each part of the code. Use when the user wants a game like the pixel fighter jet demo, mentions sprite stacking or 'no 3D engine', wants to fork, reskin, extend or fix a game in examples/, or wants to understand how the technique works."
 ---
 
-# Building a game with sprite-stack-kit
+# sprite-stack-kit: start here
 
-If the user wants a whole game made, follow `START.md` at the top of the repository. It has the questions to ask and the order to build in.
+Say the user's goal back in one sentence. Match it to a playbook, read `playbooks/<name>.md` beside this file, and put its steps in your todo list, if you have one, before you do anything else.
+
+| Playbook | The user wants |
+| --- | --- |
+| `new-game` | A whole new game: "make a boat game in this style" |
+| `feature` | Something added to a game: enemies, a score, a radar, sound |
+| `reskin` | The same game with a new look: "a dragon over a desert" |
+| `bug-fix` | Something that is broken, looks wrong or is slow |
+| `learn` | To understand how it works. Nothing is changed |
+
+If nothing fits, do the smallest thing that meets the goal and keep to the rest of this page.
 
 ## The idea
 
-The whole game is drawn by plain JavaScript into one small picture, about 400 × 240 pixels, which the page shows scaled up with hard edges. Objects are **sprite stacks**: piles of flat pixel slices, one per layer of height. The ground is a height map drawn as stacked columns from near to far. One short camera formula gives a flat overhead view, a view from behind and a view from the cockpit.
+Plain JavaScript draws the whole game into one small picture, about 400 × 240 pixels, shown scaled up with hard edges. Objects are sprite stacks: piles of flat pixel slices, one per layer of height. The ground is a height map drawn as columns from near to far. One camera formula gives the view from above, from behind and from the cockpit. `docs/how-it-works.md` shows all of it with pictures.
 
-`docs/how-it-works.md` explains all of it in plain language, with pictures. Read it once before your first change. `docs/deep-dive.md` has the reasoning behind each formula, and `docs/glossary.md` has the terms.
+## What a game must keep
 
-## Rules that do not bend
+1. Every game object is written into the one low-resolution picture, pixel by pixel. Only hints and buttons are page elements.
+2. No 3D engine library, no WebGL, no libraries, no network. The few lines of 3D maths are the game's own. No image or sound files unless the user asks.
+3. The same seed and input draw the same frames. Use `makeRng` and `hash2` from `rng.js`, never `Math.random()` or the clock.
+4. Nothing is created in the frame loop, strings included. Draw numbers with `number()` from `paint.js`.
+5. Fades are dithered, not blended.
+6. Bun runs everything. No npm, no dependencies.
 
-1. **One low-resolution picture.** Every game object is written into `fb.color` pixel by pixel. No canvas path drawing and no DOM elements for game objects. Hints and buttons are DOM elements over the canvas.
-2. **No 3D engine, no WebGL, no libraries, no network.** `bun run check` fails if a game breaks this.
-3. **No image or sound files** unless the user asks for them. Shapes are built in code or stored as encoded grids in the source.
-4. **Repeatable.** The same seed and input draw the same frames. No `Math.random()` and no clock in game code. Use `makeRng` and `hash2` from `rng.js`.
-5. **Nothing is created in the frame loop.** Make typed arrays and objects once and reuse them.
-6. **Fades use dithering, not blending.** Fog comes in steps.
-7. **Bun runs everything.** Use `bun` for every command. Do not use npm, and do not add dependencies.
+Two limits of the technique. Say so early if a request runs into one:
 
-## Where things are
+- The ground has one height per pixel, so there are no caves, bridges or overhangs.
+- A stack is flat slices. Seen exactly from the side it thins to lines.
 
-All paths are in `examples/starter/src`.
-
-| File | Holds | Skill |
-| --- | --- | --- |
-| `framebuffer.js` | The picture, the depth array, colour helpers, the dither pattern | `software-framebuffer` |
-| `model.js` | The craft as a grid of slices; `buildModel`, `encodeGrid` | `sprite-stack-models` |
-| `stack.js` | `drawStack`: draws any stacked model through the camera | `sprite-stack-models` |
-| `world.js` | Height map, materials, clouds, palette, from a seed | `stacked-terrain` |
-| `terrain.js` | `drawWorld` and `drawSky` | `stacked-terrain` |
-| `camera.js` | The camera formula, `project`, and the three poses in `aimCamera` | `one-camera-views` |
-| `roll.js` | Turns the picture of the world, so the cockpit view can bank | `one-camera-views` |
-| `cockpit.js` | The cockpit: painted layers, live instruments, head-up display | `cockpit-and-hud` |
-| `paint.js` | Dots, boxes, lines, discs and a 3 × 5 pixel font | `cockpit-and-hud` |
-| `game.js` | Flight, camera motion, draw order, `TUNING` | `game-feel`, `one-camera-views` |
-| `main.js` | Canvas size, input events, the frame loop | `software-framebuffer` |
-| `rng.js` | Seeded random numbers, tileable noise | |
-
-## The working loop
-
-1. Pick the smallest change that will be visible.
-2. Make it.
-3. Run `bun run check`. For anything with states or modes, add it to the game's `states.js` first and run `bun run states` (`verify-states` skill).
-4. Run `bun run snapshot` and look at the PNG files in `snapshots/`. Do not skip this when you change drawing. A frame can pass every check and still look wrong.
-5. If you changed input, run `bun start` and try it in a browser.
-
-The `check-your-work` skill has the details.
-
-## Three kinds of request
-
-**Reskin: "make it a dragon over a desert".** Change the shape in `sculpt()` and the colours in `CRAFT_PALETTE` (`model.js`). Change `MATERIALS` and the land rules in `buildWorld()` (`world.js`). Adjust `TUNING` (`game.js`). If the new world has no sea, or the new craft has no wings, see "What the tools need from a game" below.
-
-**New feature: "add enemies", "add a radar to the cockpit", "add sound".** Read the matching skill. Put the feature in its own file and call it from `game.js`. If Dash's game has the feature, the `study-the-reference` skill tells you where to read how he did it.
-
-**New game: "make a boat game in this style".** Copy the starter and work in the copy:
+## Every step ends with a check
 
 ```sh
-cp -r examples/starter examples/boats
-bun scripts/serve.mjs examples/boats
-bun run check --game examples/boats
-bun run snapshot --game examples/boats
+bun run check --game examples/<name>      # the kit's promises still hold
+bun run states --game examples/<name>     # every state the game can reach keeps its rules
+bun run snapshot --game examples/<name>   # then look at the frames, if you can
 ```
 
-The checks and the snapshot tool work on a copy as long as it keeps the starter's file names and the names in the next section.
+Leave out `--game` for the starter. A frame can pass every check and still look wrong, so look. Fix the cause of a failure and never loosen a check or a rule to pass. If a rule was never true, change it and say so. If two fixes for one problem have failed, question what both assumed. Say plainly what you could not check. The `check-your-work` skill has the details.
 
-## What the tools need from a game
+## The skill for each part
 
-`bun run check`, `bun run states` and `bun run snapshot` drive a copy through the starter's names. Keep these, with whatever meaning suits the game. A balloon's hold can light a burner; its click can be a slow twirl.
+Read the skill before you change its files. Each is at `.agents/skills/<name>/SKILL.md`.
 
-| File | Keep |
+| Skill | Covers |
 | --- | --- |
-| `game.js` | `createGame`, `VIEWS`, `TUNING`. On the game: `update`, `render`, `resize`, `setKeys`, `pointerMove`, `press`, `release`, `roll`, `nextView`, `view`, `chaseAmount`, `boost`, `world`, `model`, `camera`, and `craft` with `x`, `y`, `z`, `yaw`, `spin` |
-| `world.js` | `buildWorld`, `groundAt`, `GROUND_MAX`, `CLOUD_LAYERS`, `MAT` |
-| `model.js` | `sculptGrid`, `encodeGrid`, `decodeGrid`, `buildCraft`, `CRAFT_W`, `CRAFT_L`, `CRAFT_H`. The model is the same left and right, and has an `outline` colour |
-| `camera.js`, `framebuffer.js` | As they are |
+| `software-framebuffer` | `framebuffer.js`, `main.js`: the picture, depth, dithering, the page |
+| `sprite-stack-models` | `model.js`, `stack.js`: making and drawing stacked models |
+| `stacked-terrain` | `world.js`, `terrain.js`: land, water, clouds, fog, sky |
+| `one-camera-views` | `camera.js`, `roll.js`: the camera, views, banking the picture |
+| `cockpit-and-hud` | `cockpit.js`, `paint.js`: instruments, a score, any display in the picture |
+| `game-feel` | `game.js`: controls, motion, trails, flames, sound |
+| `verify-states` | `states.js`: anything with states or modes; bugs that need a certain order of steps |
+| `study-the-reference` | How Dash's original game does something |
 
-The checks also expect this behaviour: the right key turns the craft clockwise, pointing up climbs, a click sets `craft.spin` to 0, a hold lifts `boost` above 0.6, and a held dive never reaches the ground. How fast any of it happens is the game's own tuning.
-
-What a game may delete:
-
-- **No cockpit.** Take `'cockpit'` out of `VIEWS`. Then `cockpit.js`, `roll.js`, `cockpitAmount`, `viewRoll` and the code that uses them can go. So can the rules in `states.js` that name the cockpit.
-- **No sea.** Take `LAND_SHARE` out of `world.js`, and the check on it is skipped. `terrain.js` and the spawn code in `world.js` use `MAT.SEA`, `MAT.SHALLOW`, `MAT.SURF` and `WATER_BELOW` by name, so change those lines too.
-- **No trails or flames.** Leave `wingtips` or `nozzles` out of the model.
-- **No pulling the stack apart.** Delete `toggleSpread`, its key, and its step in `states.js`.
-## What fits this approach
-
-It suits anything seen from above, from behind or from a driver's seat over a landscape: flying, sailing, hovering, racing across terrain, a top-down adventure, a city flyover.
-
-It has two limits. Say so early if a request runs into one.
-
-- **The ground has one height per pixel.** There are no caves, bridges, tunnels or overhangs.
-- **A stack is made of flat slices.** It looks solid from above or at an angle. Seen exactly from the side it thins to lines. An object that tumbles through every angle needs each cell drawn as a small cube instead. Dash's `voxel-sprite.ts` does this for the pilot.
-
-## Before you finish
-
-Run `bun run check`. Look at a fresh snapshot. If you changed what the starter draws, run `bun run figures` so the documents' pictures match. Update the README, the skill and the documents if behaviour changed. If you used someone's idea, add them to `CREDITS.md`.
+`needs.md`, beside this file, lists the names the tools need from a copy of the starter and what a game may delete: the cockpit, the sea, trails.

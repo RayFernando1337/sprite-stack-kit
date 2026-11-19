@@ -12,7 +12,7 @@ Install [Bun](https://bun.sh), clone this repository, open the folder in your co
 
 > Read START.md and follow it. I want to make a game.
 
-[START.md](START.md) takes it from there. Your agent asks you six questions about the game, its look and its limits, writes down what you agreed, and builds in small steps that it checks as it goes. It works with any agent that can read files and run commands: Claude Code, Codex, Cursor, Droid and others.
+[START.md](START.md) sends your agent to one entry skill, which picks a playbook for what you asked. For a new game it asks you six questions about the game, its look and its limits, writes down what you agreed, and builds in small steps that it checks as it goes. There are playbooks for adding a feature, changing the look, fixing a bug and learning how it works too. It works with any agent that can read files and run commands: Claude Code, Codex, Cursor, Droid and others.
 
 ## What you get
 
@@ -78,7 +78,7 @@ Add `?seed=3` to the address for a different world. Add `?view=chase` or `?view=
 
 ## Build your own game
 
-**With a coding agent.** For a whole game, start with [START.md](START.md). For a single change, open this folder in your agent and say what you want to see, for example:
+**With a coding agent.** Start with [START.md](START.md), then say what you want to see, for example:
 
 - "Turn the craft into a hot-air balloon and make the islands a desert."
 - "Add enemy boats that I can shoot."
@@ -124,7 +124,7 @@ It is a base, not a finished game.
 
 | Path | What it is |
 | --- | --- |
-| `START.md` | The entry point for making a game with a coding agent |
+| `START.md` | Where a person points their coding agent. It leads to the entry skill, `.agents/skills/sprite-stack-game`, and its playbooks |
 | `examples/starter/` | The game to fork: 13 files, 99 KB with comments, 37 KB gzipped, plus its state map |
 | `docs/` | The picture tour, the tutorial, the deeper look, the glossary, and how to get and read the original |
 | `.agents/skills/` | Skills for coding agents, one folder each. They are plain how-to guides, so people can read them too |
@@ -141,7 +141,7 @@ This kit stands on other people's work. The short version:
 - **Levi 卧云** ([@Leviwoyun](https://x.com/Leviwoyun)) and **阿旭gogogo** ([@axu_ai](https://x.com/axu_ai)) shared the prompts they used to recreate it.
 - **Del** ([@TheCartelDel](https://x.com/TheCartelDel)) gave the explanation, "sprite stacking", that most people learned the name from, in a thread started by **/OVRFLW** ([@overflowyouknow](https://x.com/overflowyouknow)).
 - **Dilip** ([@dilip_ramirez](https://x.com/dilip_ramirez)) ported it to an ESP32-S3.
-- **Lauren Tan** ([@poteto](https://x.com/poteto)) wrote [pstack](https://github.com/cursor/plugins/tree/main/pstack), whose ideas about how agents should verify their work shaped `START.md` and the state walker.
+- **Lauren Tan** ([@poteto](https://x.com/poteto)) wrote [pstack](https://github.com/cursor/plugins/tree/main/pstack), whose ideas about one entry point, playbooks and how agents should verify their work shaped the entry skill and the state walker.
 
 [CREDITS.md](CREDITS.md) has everyone, with links to their posts. If you build something with this kit, please credit Dash too.
 

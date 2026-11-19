@@ -42,8 +42,8 @@ Do this before you build the feature.
 
 1. **Events.** Add each new thing the player can do. Also add what the world can do to the player, such as `'a shot hits you'`. Call the game's own functions. A walk is only a few steps long, so it will not fly to something far away. The event may put the craft there instead: set `game.craft.x` and `y` to the ring's. Do not add functions to the game that only the map calls.
 2. **State.** Add a field for each new thing that can be true: `health: 'full' | 'hurt' | 'gone'`. Use a few named values, not numbers. Group numbers into the ranges that behave differently.
-3. **Rules.** Turn each "always true" sentence into a rule. `check(game, frame, state, notes)` returns nothing when the rule holds, or a few words saying how it is broken. To compare with before, as in "the score never goes down", write the old value into `notes` in the event and read it in the rule.
-4. Run `bun run states`. A new rule should fail, or have nothing to check, until the feature exists. Make it fail in plain words: "the game has no score", not "the score is undefined". Then build until it passes.
+3. **Rules.** Turn each "always true" sentence into a rule. `check(game, frame, state, notes)` returns nothing when the rule holds, or a few words saying how it is broken. To compare with before, as in "the score never goes down", export `before(game, notes)` from the map. The walker calls it before every step, so write the old value into `notes` there and read it in the rule.
+4. Run `bun run states`. A new rule should fail, or have nothing to check, until the feature exists. Make it fail in plain words: "the game has no score", not "the score is undefined". A rule must not import a file that does not exist yet, or the whole walk stops. Then build until it passes.
 
 Kinds of rule that find real bugs:
 
@@ -58,7 +58,7 @@ Kinds of rule that find real bugs:
 
 Signs of a hidden state: the walk reports far fewer states than you expect, or a state you know exists is never listed with `--chart`.
 
-**A rule that cannot fail.** Break the feature on purpose and run the walk. It must report the break. Then put the feature back. Do this once for every new rule.
+**A rule that cannot fail.** Break the feature on purpose and run the walk. It must report the break. Then put the feature back. Do this once for every new rule. A rule that works out its answer the same way the game does will share the game's mistakes, so work it out another way, and look at a frame.
 
 ## Reading the result
 

@@ -15,25 +15,7 @@ bun run check --game examples/my-game   # for a copy of the starter
 bun test                                # the same checks, through Bun's test runner
 ```
 
-They run the game with no browser and take a few seconds. They check that:
-
-- the encoded model decodes to the same grid, and the model is symmetrical
-- the same seed gives the same world, and land covers the share asked for
-- nothing in the world is taller than the renderer allows
-- the camera formula puts known points on known pixels
-- every view fills every pixel at three frame shapes, with the craft on screen from above and behind and out of sight from the cockpit
-- the craft is solid in the chase view, however the chase camera is tuned
-- every view still draws in a frame that is tiny, very tall or very wide
-- the camera slides one way through all three views, and every frame on the way is complete
-- in the cockpit the eye stays in the craft, the picture banks with it, and a barrel roll turns the picture once and leaves it level
-- a turned sheet covers the whole frame at every angle, and a right bank lifts the right end of the horizon
-- the same seed and input draw the same frame
-- a turn, a click and a hold each do what they should, and pointing steers from behind and from the cockpit
-- a held dive never reaches the ground
-- a frame fits easily in a sixtieth of a second, in every view
-- the game uses no libraries, no network, no WebGL and no `Math.random()`
-- the game keeps the rules in its state map in every state it can reach
-- the local server serves the folder it is given
+They run the game with no browser and take a few seconds. Each line of output is one promise, written as a plain statement, with `ok` or `FAIL` in front.
 
 If a check fails, fix the cause. Do not loosen the check unless the promise itself has changed, and say so if it has.
 
@@ -99,7 +81,7 @@ Common causes: allocating inside the loop, a per-pixel function call that could 
 
 ## 6. Add a check for a new promise
 
-When you add a feature that must keep working, add a check inside `runChecks()` in `scripts/check.mjs`:
+A feature of one game is protected by rules in that game's `states.js`. When you add a promise that every game must keep, add a check inside `runChecks()` in `scripts/check.mjs`:
 
 ```js
 {

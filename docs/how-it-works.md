@@ -40,11 +40,11 @@ Take a 3D object and cut it into horizontal slices, like a loaf of bread. Each s
 
 ![The nine slices of the craft, laid side by side](images/slices.png)
 
-Now draw the slices from the bottom up, and draw each one a pixel higher on the screen than the one below. The pile looks solid. Turn every slice by the same angle and the object turns.
+Now draw the slices one over the other, each a pixel higher on the screen than the one below. The pile looks solid. Turn every slice by the same angle and the object turns.
 
 ![The pile growing: two slices, three, four, six, and all nine](images/pile.png)
 
-A stack is stored as a grid of numbers. Each number says which colour that cell is, and 0 means empty. The starter's craft is a grid 31 cells wide, 42 long and 11 layers tall, and it is built by a few loops in the code, so there is no image file.
+A stack is stored as a grid of numbers. Each number says which colour that cell is, and 0 means empty. The starter's craft is a grid 31 cells wide, 42 long and 11 layers tall, of which nine hold something, and it is built by a few loops in the code, so there is no image file.
 
 To bank or pitch the craft, the whole grid is tilted in 3D before it is drawn. Every cell is then a tiny flat tile, and the renderer fills the pixels that the tile covers.
 

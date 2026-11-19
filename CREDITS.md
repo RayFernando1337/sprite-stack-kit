@@ -67,11 +67,13 @@ Other replies shaped how [`docs/how-it-works.md`](docs/how-it-works.md) is writt
 
 **Lauren Tan** · [@poteto](https://x.com/poteto) · wrote [pstack](https://github.com/cursor/plugins/tree/main/pstack), the set of agent skills she uses at Cursor. This kit takes these ideas from it, and none of its text or code:
 
-- one entry point that routes the work (`START.md`)
+- one entry skill that matches the request to a short playbook (`.agents/skills/sprite-stack-game`)
 - find out what you can from the repository, and ask the person only what you cannot observe
 - write down states and rules, check every path, and report a broken rule as the shortest path in the reader's words (`scripts/states.mjs`, after pstack's formal verification and statechart skills, which use TLA+)
 - a check must be seen to fail before it is trusted, and a rule is never weakened to get a pass
 - work in small units that each end in a check, and prefer taking away to adding
+
+**Anthropic** publishes guidance on writing for current models, which is why `AGENTS.md` is short and the detail sits in skills that are read when needed: [The new rules of context engineering for Claude 5 generation models](https://claude.dev/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models/) by Thariq Shihipar, and [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
 
 ## Tools and older ideas
 
