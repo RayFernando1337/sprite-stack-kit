@@ -27,6 +27,7 @@ It runs the game in Node with no browser and takes a few seconds. It checks that
 - a held dive never reaches the ground
 - a frame fits easily in a sixtieth of a second
 - the game uses no libraries, no network and no WebGL
+- the local server serves the folder it is given
 
 If a check fails, fix the cause. Do not loosen the check unless the promise itself has changed, and say so if it has.
 

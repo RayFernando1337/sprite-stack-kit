@@ -3,6 +3,7 @@
 // copy of the starter that keeps its file names.
 // Each check is one promise the kit makes, so a change that breaks a promise fails here.
 
+import { spawnSync } from 'node:child_process'
 import { readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -192,6 +193,14 @@ for (const view of ['top', 'chase']) {
     if (/getContext\(\s*['"](webgl2?|webgpu)|WebGLRenderingContext|navigator\.gpu/.test(text)) outside.push(`${file}: uses WebGL or WebGPU`)
   }
   check('starter: no libraries, no network, no 3D engine', outside.length === 0, outside.join('; ') || `${sources.length} files, ${(raw / 1024).toFixed(1)} KB, ${(packed / 1024).toFixed(1)} KB gzipped`)
+}
+
+// ── the tools
+{
+  // With no --port, the server once ignored its folder and served the starter instead.
+  const run = spawnSync(process.execPath, [join(root, 'scripts/serve.mjs'), 'no/such/folder'], { encoding: 'utf8', timeout: 5000 })
+  const refused = run.status === 1 && run.stderr.includes('Nothing to serve')
+  check('tools: the server serves the folder it is given, and refuses a missing one', refused, run.status === null ? 'it started serving something else' : `exit ${run.status}`)
 }
 
 console.log(failed ? `\n${failed} check(s) failed` : '\nall checks passed')

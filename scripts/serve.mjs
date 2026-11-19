@@ -16,7 +16,11 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
 const portAt = args.indexOf('--port')
 const firstPort = portAt >= 0 ? Number(args[portAt + 1]) : 5173
-const dirArg = args.find((a, i) => !a.startsWith('--') && i !== portAt + 1) ?? 'examples/starter'
+const dirArg = args.find((a, i) => !a.startsWith('--') && (portAt < 0 || i !== portAt + 1)) ?? 'examples/starter'
+if (!Number.isInteger(firstPort) || firstPort < 1 || firstPort > 65535) {
+  console.error('--port needs a number from 1 to 65535.')
+  process.exit(1)
+}
 const base = resolve(root, dirArg)
 
 if (!existsSync(base)) {
