@@ -15,6 +15,7 @@ Bun only. No npm, no lockfile, no dependencies. There is nothing to install or b
 | `bun run states` | Tries every order of the steps in the game's `states.js` and checks its rules |
 | `bun run snapshot` | Saves frames to `snapshots/` so you can look at what the game draws |
 | `bun run maps` | Packs real map data into a game's source, from the places in its `maps.js`. Needs the network the first time |
+| `bun run views <sheet.png>` | Cuts a stacked model from one PNG of four flat drawings: top, side, front, back |
 | `bun run figures` | Redraws `docs/images/` from the starter's code. Never edit those by hand |
 | `bun run fetch-reference` | Downloads Dash's build into `reference/`. Needs the network |
 

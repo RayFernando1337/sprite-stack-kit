@@ -32,15 +32,6 @@ const SHIP_PALETTE = [
   [38, 40, 50], [66, 68, 80], [98, 102, 114],
   [255, 198, 98],
 ]
-// The computer pilots fly the same ship in other colours.
-const RIVAL_PALETTE = [
-  null,
-  [52, 58, 74], [84, 92, 112], [124, 134, 156],
-  [128, 92, 16], [206, 158, 30], [250, 214, 72],
-  [96, 22, 30], [176, 44, 44], [240, 100, 80],
-  [30, 30, 38], [52, 54, 64], [80, 84, 96],
-  [140, 255, 170],
-]
 const FLAME = [[255, 250, 222], [255, 216, 112], [255, 152, 48], [234, 86, 28], [152, 46, 38]]
 
 /** Fills the ship's grid with the first (darkest) tone of each surface. Edit this to change the ship. */
@@ -175,6 +166,7 @@ export function decodeGrid(encoded, size) {
  *   outline                 [r, g, b] of the line drawn round the model (optional)
  *   nozzles, nozzleRadius   where flames come from (optional)
  *   wingtips                where trails come from (optional)
+ *   flame                   five colours for the engine flame, hot to cool (optional)
  * }
  * Nozzles and wingtips are { a, b, z }: cells right of the centre line, cells ahead of the
  * pivot, and slices above the pivot.
@@ -215,7 +207,9 @@ export function buildModel(grid, spec) {
     cells,
     colors,
     outline: rgb(...(spec.outline ?? [20, 24, 40])),
-    flame: FLAME.map((c) => rgb(...c)),
+    flame: (spec.flame ?? FLAME).map((c) => rgb(...c)),
+    guns: spec.guns ?? [],
+    rails: spec.rails ?? [],
     nozzles: spec.nozzles ?? [],
     nozzleRadius: spec.nozzleRadius ?? 1.5,
     wingtips: spec.wingtips ?? [],
@@ -226,17 +220,192 @@ export function sculptGrid() {
   return shadeGrid(sculpt(), CRAFT_SIZE, GLOW)
 }
 
-/** The ship. `rival` gives the colours the computer pilots fly in. */
-export function buildCraft({ rival = false } = {}) {
+/** The rocket ship: what the player flies over the Earth and the country. */
+export function buildCraft() {
   const pivotK = 19
   const pivotZ = 6
   return buildModel(sculptGrid(), {
     ...CRAFT_SIZE,
     pivotK,
     pivotZ,
-    palette: rival ? RIVAL_PALETTE : SHIP_PALETTE,
+    palette: SHIP_PALETTE,
     nozzles: [{ a: 0, b: pivotK - 37.6, z: 0 }],
     nozzleRadius: 2.4,
     wingtips: [{ a: -9, b: pivotK - 34, z: 0 }, { a: 9, b: pivotK - 34, z: 0 }],
   })
+}
+
+// ── the two fighter planes: the one the rocket turns into over the city, and the enemy's
+
+const PLANE = { width: 27, length: 36, height: 10 }
+const RIVAL = { width: 25, length: 32, height: 11 }
+// The player's plane wears the rocket's colours, so it reads as the same ship in a new shape.
+const PLANE_PALETTE = SHIP_PALETTE
+const RIVAL_PALETTE = [
+  null,
+  [44, 50, 68], [74, 82, 104], [112, 122, 146],
+  [150, 108, 14], [222, 172, 30], [255, 226, 84],
+  [110, 20, 34], [190, 40, 48], [250, 104, 90],
+  [26, 26, 34], [48, 50, 60], [76, 80, 92],
+  [150, 255, 236],
+]
+const RIVAL_FLAME = [[236, 255, 250], [150, 255, 236], [70, 214, 226], [44, 136, 214], [48, 70, 160]]
+
+/** An empty grid and a `put` that writes both sides of the centre line at once. */
+function blank({ width, length, height }) {
+  const grid = new Uint8Array(width * length * height)
+  const mid = (width - 1) / 2
+  const put = (a, k, z, kind) => {
+    if (k < 0 || k >= length || z < 0 || z >= height || a < 0 || a > mid) return
+    grid[(z * length + k) * width + mid + a] = kind
+    grid[(z * length + k) * width + mid - a] = kind
+  }
+  return { grid, put }
+}
+
+/** The player's fighter: swept wings, two canted tail fins and two engines. */
+function sculptPlane() {
+  const { grid, put } = blank(PLANE)
+  const core = 3
+  // body: an oval tube that grows out of a pointed nose
+  for (let k = 0; k < 34; k++) {
+    const grow = Math.sin((Math.min(k + 1, 11) / 11) * Math.PI * 0.5)
+    const wide = (0.5 + 2.3 * grow) - Math.max(0, k - 29) * 0.12
+    const tall = 0.5 + 1.7 * grow
+    for (let z = 0; z < PLANE.height; z++) {
+      for (let a = 0; a <= 3; a++) {
+        if ((a / wide) ** 2 + ((z - core) / tall) ** 2 <= 1) put(a, k, z, k < 4 ? TRIM : HULL)
+      }
+    }
+  }
+  // the canopy: a long glass bubble
+  for (let k = 6; k <= 14; k++) {
+    for (let a = 0; a <= 1; a++) {
+      if ((a / 1.7) ** 2 + ((k - 10) / 4.2) ** 2 <= 1) put(a, k, core + 3, GLASS)
+    }
+    if (k >= 8 && k <= 12) put(0, k, core + 4, GLASS)
+  }
+  // air intakes on the shoulders
+  for (let k = 11; k <= 18; k++) {
+    put(3, k, core, METAL)
+    put(3, k, core - 1, METAL)
+  }
+  // wings: swept back, two layers thick at the root, painted at the tips
+  for (let a = 3; a <= 12; a++) {
+    const lead = Math.ceil(13 + (a - 3) * 1.25)
+    const trail = Math.floor(27 + (a - 3) * 0.25)
+    for (let k = lead; k <= trail; k++) {
+      put(a, k, core, a >= 11 ? TRIM : HULL)
+      if (a <= 6 && k > lead) put(a, k, core - 1, HULL)
+    }
+  }
+  // a missile rail on each wingtip
+  for (let k = 22; k <= 31; k++) put(12, k, core, k < 24 ? METAL : TRIM)
+  // tailplanes
+  for (let a = 3; a <= 7; a++) {
+    for (let k = Math.ceil(29 + (a - 3) * 0.9); k <= 34; k++) put(a, k, core, a === 7 ? TRIM : HULL)
+  }
+  // two tail fins that lean outwards
+  for (let k = 26; k <= 33; k++) {
+    const tall = Math.min(4, Math.floor((k - 25) * 0.75))
+    for (let n = 0; n < tall; n++) put(n >= 2 ? 3 : 2, k, core + 3 + n, n === tall - 1 ? TRIM : HULL)
+  }
+  // two engines, side by side
+  for (let k = 31; k <= 35; k++) {
+    for (let z = core - 1; z <= core + 1; z++) {
+      for (let a = 1; a <= 2; a++) put(a, k, z, k === 35 && z === core ? GLOW : METAL)
+    }
+  }
+  return grid
+}
+
+/** The enemy's fighter: a dart with one big delta wing, small foreplanes and one tall fin. */
+function sculptRival() {
+  const { grid, put } = blank(RIVAL)
+  const core = 3
+  for (let k = 0; k < 30; k++) {
+    const grow = Math.sin((Math.min(k + 1, 14) / 14) * Math.PI * 0.5)
+    const wide = 0.4 + 1.9 * grow
+    const tall = 0.4 + 1.7 * grow
+    for (let z = 0; z < RIVAL.height; z++) {
+      for (let a = 0; a <= 2; a++) {
+        if ((a / wide) ** 2 + ((z - core) / tall) ** 2 <= 1) put(a, k, z, HULL)
+      }
+    }
+  }
+  for (let k = 9; k <= 14; k++) {
+    put(0, k, core + 3, GLASS)
+    if (k < 14) put(1, k, core + 2, GLASS)
+  }
+  // foreplanes
+  for (let a = 2; a <= 5; a++) {
+    for (let k = Math.ceil(5 + (a - 2) * 0.9); k <= 8; k++) put(a, k, core, TRIM)
+  }
+  // the delta: a straight trailing edge and a painted leading edge
+  for (let a = 2; a <= 11; a++) {
+    const lead = Math.ceil(10 + (a - 2) * 1.9)
+    for (let k = lead; k <= 28; k++) {
+      put(a, k, core, k <= lead + 1 || a === 11 ? TRIM : HULL)
+      if (a <= 5 && k > lead + 2) put(a, k, core - 1, HULL)
+    }
+  }
+  // a small upright fin on each wingtip
+  for (let k = 25; k <= 28; k++) put(11, k, core + 1, TRIM)
+  // one tall fin
+  for (let k = 20; k <= 30; k++) {
+    const tall = Math.min(5, Math.floor((k - 19) * 0.8)) - Math.max(0, k - 29) * 2
+    for (let n = 0; n < tall; n++) put(0, k, core + 3 + n, n >= tall - 1 ? TRIM : HULL)
+  }
+  // one engine
+  for (let k = 28; k <= 31; k++) {
+    for (let z = core - 2; z <= core + 2; z++) {
+      for (let a = 0; a <= 2; a++) {
+        const far = Math.sqrt(a * a + (z - core) * (z - core))
+        if (far <= 2.3) put(a, k, z, k === 31 && far < 1.5 ? GLOW : METAL)
+      }
+    }
+  }
+  return grid
+}
+
+/** The fighter the ship turns into over the city. */
+export function buildPlane() {
+  const pivotK = 19
+  const pivotZ = 3
+  return buildModel(shadeGrid(sculptPlane(), PLANE, GLOW), {
+    ...PLANE,
+    pivotK,
+    pivotZ,
+    palette: PLANE_PALETTE,
+    nozzles: [{ a: -1.5, b: pivotK - 35.6, z: 0 }, { a: 1.5, b: pivotK - 35.6, z: 0 }],
+    nozzleRadius: 1.5,
+    wingtips: [{ a: -12, b: pivotK - 30, z: 0 }, { a: 12, b: pivotK - 30, z: 0 }],
+    // where the guns and the missiles leave from
+    guns: [{ a: -4, b: pivotK - 14, z: -1 }, { a: 4, b: pivotK - 14, z: -1 }],
+    rails: [{ a: -12, b: pivotK - 24, z: -1 }, { a: 12, b: pivotK - 24, z: -1 }],
+  })
+}
+
+/** The plane the computer pilots fly: another shape, in other colours, with a colder flame. */
+export function buildRival() {
+  const pivotK = 18
+  const pivotZ = 3
+  return buildModel(shadeGrid(sculptRival(), RIVAL, GLOW), {
+    ...RIVAL,
+    pivotK,
+    pivotZ,
+    palette: RIVAL_PALETTE,
+    outline: [58, 14, 30],
+    flame: RIVAL_FLAME,
+    nozzles: [{ a: 0, b: pivotK - 31.6, z: 0 }],
+    nozzleRadius: 2,
+    wingtips: [{ a: -11, b: pivotK - 28, z: 0 }, { a: 11, b: pivotK - 28, z: 0 }],
+  })
+}
+
+/** The same model in one flat colour: drawn for a moment when something is hit. */
+export function flashOf(model, colour = [255, 255, 255]) {
+  const colors = new Uint32Array(model.colors.length)
+  for (let i = 1; i < colors.length; i++) colors[i] = rgb(...colour)
+  return { ...model, colors }
 }

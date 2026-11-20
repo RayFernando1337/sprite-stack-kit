@@ -5,7 +5,7 @@ description: "How to check a game in every state it can reach, not just the case
 
 # Checking every state
 
-Files: `examples/<game>/states.js` (the map, one per game) and `scripts/states.mjs` (the walker).
+Files: `states.js` in the game's folder (the map, one per game) and `scripts/states.mjs` in the kit (the walker).
 
 `bun run check` tries the cases someone wrote. `bun run states` tries every order of the player's steps, from a fresh game, until it has seen every state the map can tell apart. It runs the real game, so there is no separate model to keep in step with the code. It takes about two seconds.
 
@@ -40,8 +40,8 @@ FAIL  left alone, the camera arrives and a roll finishes
 
 Do this before you build the feature.
 
-1. **Events.** Add each new thing the player can do. Also add what the world can do to the player, such as `'a shot hits you'`. Call the game's own functions. A walk is only a few steps long, so it will not fly to something far away. The event may put the craft there instead: set `game.craft.x` and `y` to the ring's. Do not add functions to the game that only the map calls.
-2. **State.** Add a field for each new thing that can be true: `health: 'full' | 'hurt' | 'gone'`. Use a few named values, not numbers. Group numbers into the ranges that behave differently.
+1. **Events.** Add each new thing the player can do. Also add what the world can do to the player, such as `'a shot hits you'`. Call the game's own functions. A walk is only a few steps long, so it will not fly to something far away. The event may put the craft there instead: set `game.craft.x` and `y` to the ring's. An event may also call `game.update()` itself, to hold a trigger down or wait for a lock. The rules are judged only after the step, so such an event writes what happened on the way into `notes`. Do not add functions to the game that only the map calls.
+2. **State.** Add a field for each new thing that can be true: `health: 'full' | 'hurt' | 'gone'`. Use a few named values. Group a number into the ranges that behave differently. Where every value behaves differently, such as a hull of six hits, use the number itself.
 3. **Rules.** Turn each "always true" sentence into a rule. `check(game, frame, state, notes)` returns nothing when the rule holds, or a few words saying how it is broken. To compare with before, as in "the score never goes down", export `before(game, notes)` from the map. The walker calls it before every step, so write the old value into `notes` there and read it in the rule.
 4. Run `bun run states`. A new rule should fail, or have nothing to check, until the feature exists. Make it fail in plain words: "the game has no score", not "the score is undefined". A rule must not import a file that does not exist yet, or the whole walk stops. Then build until it passes.
 
@@ -58,7 +58,7 @@ Kinds of rule that find real bugs:
 
 Signs of a hidden state: the walk reports far fewer states than you expect, or a state you know exists is never listed with `--chart`.
 
-**A rule that cannot fail.** Break the feature on purpose and run the walk. It must report the break. Then put the feature back. Do this once for every new rule. A rule that works out its answer the same way the game does will share the game's mistakes, so work it out another way, and look at a frame.
+**A rule that cannot fail.** Break the feature on purpose and run the walk. It must report the break, under the rule you wrote for it. A second code path can hide a break, and a break can trip some other rule instead. Then put the feature back. Do this once for every new rule. A rule that works out its answer the same way the game does will share the game's mistakes, so work it out another way, and look at a frame.
 
 ## Reading the result
 
@@ -79,16 +79,13 @@ every state the map can reach was visited
 3. Fix the game where it first goes wrong. Do not add a special case for that one path.
 4. Run the walk again.
 
-Never weaken a rule to get a pass.
-
 ## Keep the map small
 
 - Six to ten events. Leave out events that cannot change what happens next.
 - State fields with two to four values each. The number of states is their product.
-- Keep the walk under about ten seconds, so it gets run after every change.
+- Keep the walk under about ten seconds, so it gets run after every change. Every path is replayed from a fresh game, so the cost is the frames in a path, not the number of states. The cheapest fix is a lower `framesPerSecond` in the map's `start` (30 in the starter, no lower than 20) with waits of fewer frames. After that, fewer `game.update()` calls inside events.
 - The walk stops at paths of 12 steps. A game with longer chains sets `depth` in the map's `start`.
-- Where a number decides what happens next, such as hull strength, put the number itself in the state, not a group like "hurt". The walk goes on from only one game in each state.
 
 ## Where this comes from
 
-The idea of writing down states and rules, checking every path, and reporting a break as the shortest path in the reader's words comes from model checking with TLA+, and from the formal verification and statechart skills in Lauren Tan's pstack. This kit keeps the idea and drops the separate model: the game is repeatable, so the walker can drive the real code. For a proof about a design before any code exists, TLA+ is still the right tool.
+The idea comes from model checking with TLA+, and from the formal verification and statechart skills in Lauren Tan's pstack. This kit drops the separate model: the game is repeatable, so the walker can drive the real code.

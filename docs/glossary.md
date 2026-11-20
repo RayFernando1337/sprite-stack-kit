@@ -36,6 +36,8 @@ The words this kit uses, in plain language. Where a word names something in the 
 
 **Palette, palette index.** The palette is a model's short list of colours. A cell holds a palette index, a small number that picks one of them. Index 0 means the cell is empty.
 
+**Four flat views.** One model drawn four times, flat: from the top, the side, the front and the back. `bun run views` cuts a stack from them.
+
 **Pivot.** The cell a model turns about.
 
 **Outline.** The dark line one pixel wide that is drawn round a finished stack.
@@ -117,6 +119,24 @@ The words this kit uses, in plain language. Where a word names something in the 
 **Attitude ball.** The round instrument that shows sky above a line and ground below it. The line always lies along the real horizon.
 
 **Compass tape.** A strip of heading marks that slides past a fixed pointer.
+
+## Fights
+
+**Juice.** Everything that answers the player beyond the bare rule: a flash, a shake, debris, a sound. The rule says the enemy lost one point. Juice makes it feel like a hit.
+
+**Tracer.** A bright streak drawn along a shot's path, so the player can see where the cannon is firing.
+
+**Lock-on.** Keeping an enemy near the gunsight until a missile is ready to follow it.
+
+**Lead point.** Where a moving target will be when the shot arrives. Aiming there, not at the target, is what makes a shot hit.
+
+**Time to kill.** How long steady fire takes to destroy one enemy. Short feels sharp. Long feels like a chore.
+
+**Hit box.** The simple shape a shot is tested against. It is usually a little bigger than the picture, so near hits count.
+
+**Slow motion, two clocks.** The world runs on one clock that can slow down, and the player's controls and the screen effects run on another that does not.
+
+**Screen shake.** Moving the camera a pixel or two for a moment after a hit.
 
 ## Older techniques people compare this to
 

@@ -5,7 +5,7 @@ description: "How the single camera works in sprite-stack-kit: the projection fo
 
 # The camera
 
-Files, all in `examples/starter/src`: `camera.js` (the formula and the poses), `game.js` (how the camera moves: `frameCamera`, `settle`, `render`) and `roll.js` (banking the picture).
+Files, in the game's `src/` (the starter's is `examples/starter/src`): `camera.js` (the formula and the poses), `game.js` (how the camera moves: `frameCamera`, `settle`, `render`) and `roll.js` (banking the picture).
 
 `docs/deep-dive.md` sections 1, 5 and 6 derive everything on this page.
 
@@ -126,14 +126,6 @@ Poses for common views:
 - **Isometric.** `persp = 0`, a fixed `heading` of 45°, `tilt` between 0.5 and 1.
 - **Orbit.** The chase pose with a heading that turns steadily.
 
-The checks draw every view named in `VIEWS` at three sizes and walk through every view change, so a new view is tested as soon as it is listed.
+The checks draw every view named in `VIEWS` at three sizes, and every frame of every view change, so a new view is tested as soon as it is listed. Look at the middle of a change too: `bun run snapshot --view between,entering`.
 
-## Mistakes to avoid
-
-- **Cutting.** Setting the camera's numbers directly on a key press. Set the goal and let it slide.
-- **Sliding `zoom` in a straight line.** The craft balloons at the end of the move.
-- **Wrapping a heading the camera follows.** The camera spins the long way round.
-- **A camera inside a hill.** Any new eye position that trails the craft needs the same ground check as the chase view.
-- **One steering rule for every view.** What "point up" means depends on the view.
-- **Trying to roll the camera.** There is no roll in the formula. Turn the picture.
-- **Testing only the ends.** `bun run check` draws every frame of every view change. Keep that check passing, and look at `bun run snapshot --view between,entering`.
+A new eye that trails the craft needs the same ground check as the chase view, or it will end up inside a hill.

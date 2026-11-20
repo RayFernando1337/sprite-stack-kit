@@ -1,9 +1,9 @@
 ---
 name: game-feel
-description: "How motion and feedback are done in sprite-stack-kit: frame-rate independent smoothing, banking and pitching, click versus hold on one button, ground following, idle autopilot, wingtip trails, flickering flames, fixed particle pools, and sound without files. Use when tuning how the craft handles, adding controls (keys, touch, gamepad), adding particles (smoke, spray, sparks, explosions), projectiles or enemies, adding screen shake or slow motion, or adding sound."
+description: "How motion and controls are done in sprite-stack-kit: frame-rate independent smoothing, banking and pitching, click versus hold on one button, ground following, idle autopilot, wingtip trails, flickering flames, and the fixed pool that every particle uses. Use when tuning how the craft handles, adding controls (keys, touch, gamepad), or adding a trail or a simple particle. For weapons, enemies, explosions, smoke, screen shake, slow motion and sound, use the combat-and-juice skill."
 ---
 
-# Motion, controls and feedback
+# Motion and controls
 
 File: `examples/starter/src/game.js`. Input events are in `main.js`.
 
@@ -78,29 +78,21 @@ function drawPuffs() {
 }
 ```
 
-The oldest particle is overwritten when the pool is full. Nothing is allocated after start-up. Smoke, spray, sparks, shell cases, debris and bullets all fit this pattern.
+The oldest particle is overwritten when the pool is full. Nothing is allocated after start-up. Smoke, spray, sparks, spent cases, debris and rounds all fit this pattern. The `combat-and-juice` skill says what goes in each pool and how each is drawn.
 
-## Things that move and fight
+## Things that move, fight, flash and make noise
 
-An enemy or a boat is another pose plus a few numbers of state, drawn with `drawStack`. Keep them in arrays made once. For steering, give each one a wanted heading and reuse the same easing as the player. Test hits with simple distance checks in world pixels.
+Another craft or a boat is another pose plus a few numbers of state, drawn with `drawStack`. Keep them in arrays made once, and steer each with the same easing as the player.
 
-Dash's game has enemies, a cannon, missiles and a dodge. Use the `study-the-reference` skill to read how.
+Everything past that is in the `combat-and-juice` skill, at `.agents/skills/combat-and-juice/SKILL.md`. Read it before you add any of these:
 
-## Feedback
-
-- **Screen shake:** add a decaying random offset to `cam.cx` and `cam.cy`. Take the offset from `hash2`, not `Math.random`.
-- **Flash:** mix the finished picture toward white for a few frames.
-- **Slow motion:** multiply `dt` by a factor below 1 inside `update`. Timers that the player waits on should keep using real time.
-- **Hit pause:** skip `update` for two or three frames.
-
-## Sound
-
-The starter is silent. Two ways to add sound with no files:
-
-- **Synthesise it.** Web Audio oscillators and filtered noise can make an engine drone, wind, gunfire and explosions.
-- **Keep it out of the game.** Have the game expose plain numbers (speed, boost, events since last frame) and let a `sound.js` beside `main.js` turn them into audio. The cockpit's instruments already read the game this way, through the `gauges` object in `render()`.
-
-Browsers allow sound only after the player has clicked or pressed a key. Create the `AudioContext` inside the first input event.
+| You are adding | Its file there |
+| --- | --- |
+| A gun, rounds, missiles, lock-on, hit tests | `weapons.md` |
+| Enemies, their attacks, a dodge, slow motion, a hull | `enemies.md` |
+| Explosions, smoke, sparks, screen shake, flash, glow, a wake, clouds that part | `feedback.md` |
+| Sound. The starter is silent, and sound is made in code with no files | `sound.md` |
+| A way to tell whether it is fun with nobody playing | `playtest.md` |
 
 ## Mistakes to avoid
 

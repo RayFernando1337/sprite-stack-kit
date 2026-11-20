@@ -5,7 +5,7 @@ description: "How the cockpit and its instruments are drawn in sprite-stack-kit:
 
 # The cockpit and in-picture displays
 
-Files, all in `examples/starter/src`: `cockpit.js` (the cockpit), `paint.js` (drawing tools and the font) and `render()` in `game.js` (where the gauges are filled in).
+Files, in the game's `src/` (the starter's is `examples/starter/src`): `cockpit.js` (the cockpit), `paint.js` (drawing tools and the font) and `render()` in `game.js` (where the gauges are filled in).
 
 `docs/deep-dive.md` section 7 explains the ideas.
 
@@ -96,7 +96,18 @@ Offsets on a wrapping map should take the short way round: `dx -= WORLD_SIZE * M
 - The world was turned by `g.roll`, so the marks are turned by the same angle. A point `along` the horizon and `below` the centre lands at `(cx + along × cos + below × sin, cy + below × cos − along × sin)`.
 - The nose marker and the numbers are not turned. They belong to the craft.
 
-To mark a world point on the glass (a target box, a waypoint), `project()` it, then turn the result the same way about `(cam.cx, cam.cy)`.
+To mark a world point on the glass (a target box, a waypoint), `project()` it after `pasteRolled()`, then turn the result the same way about `(cam.cx, cam.cy)`. `place()` in `examples/worldfight/src/hud.js` is this code:
+
+```js
+if (project(cam, x, y, z)) {
+  const dx = cam.sx - cam.cx
+  const dy = cam.sy - cam.cy
+  const sx = cam.cx + dx * cos + dy * sin // cos and sin of g.roll
+  const sy = cam.cy + dy * cos - dx * sin
+}
+```
+
+Something that stands in the world, such as a beam over a place, is drawn before `cockpit.draw()`, so the dashboard hides its foot. An overlay, such as a target box, is drawn after it.
 
 ## The drawing tools
 
@@ -119,6 +130,10 @@ The font has the digits and the letters `A D E G H L N P S T W`. To add a letter
 
 A score, a health bar or a crosshair that shows in every view is the same thing with no layers. Write a small file with a `draw(fb, values)` function that uses `paint.js`, and call it last in `render()`, after the cockpit. Keep it small and in a corner. Long text, menus and buttons are easier to read as page elements over the canvas: see `software-framebuffer`.
 
+A game with a fight wants both. Hull and score show in every view. The cockpit adds what only it can: enemies on the radar, a box round the target on the glass, a lamp for a warning. The `combat-and-juice` skill says what a fight needs to show.
+
+The cockpit is the view people remember. A new game keeps it and repaints it to suit the craft, unless the user says to drop it.
+
 ## Style
 
 - Use few colours, from one family. The dashboard is five slate blues. The screens are seven strengths of one green.
@@ -128,9 +143,6 @@ A score, a health bar or a crosshair that shows in every view is the same thing 
 
 ## Mistakes to avoid
 
-- **Painting in `draw()`.** Looping over the whole dashboard every frame to draw things that never change. Paint them in `resize()`.
-- **Fixed pixel positions.** A layout that only fits one frame size. Use `px()` and test a phone shape.
-- **Allocating per frame.** No string building, no array literals, no `new` in `draw()`.
-- **Drawing before the roll.** Anything drawn into the sheet turns with the world. The cockpit goes after `pasteRolled()`.
 - **Covering the view.** The dashboard takes about a third of the height. More than that and there is little left to fly by.
+- **More materials than `MAP_TONE` holds.** It is `new Uint8Array(13)`. A write past its end is dropped with no error, and that material gets no tone on the map screen. Make it as long as `MAT`.
 - **Copying Dash's cockpit.** His art and layout are his. Read `cockpit.ts` for ideas with the `study-the-reference` skill, then draw your own.

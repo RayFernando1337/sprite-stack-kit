@@ -12,7 +12,15 @@ Install [Bun](https://bun.sh), clone this repository, open the folder in your co
 
 > Read START.md and follow it. I want to make a game.
 
-[START.md](START.md) sends your agent to one entry skill, which picks a playbook for what you asked. For a new game it asks you six questions about the game, its look and its limits, writes down what you agreed, and builds in small steps that it checks as it goes. There are playbooks for adding a feature, changing the look, fixing a bug and learning how it works too. It works with any agent that can read files and run commands: Claude Code, Codex, Cursor, Droid and others.
+[START.md](START.md) sends your agent to one entry skill, which picks a playbook for what you asked. For a new game it studies the original, asks you a few questions about the game, its look and what makes it fun, writes down what you agreed, and builds in small steps that it checks as it goes. There are playbooks for adding a feature, changing the look, fixing a bug and learning how it works too. It works with any agent that can read files and run commands: Claude Code, Codex, Cursor, Droid and others.
+
+If your agent has skills, you can skip the sentence above and type `/sprite-stack-game I want to make a game`. To get that command in a project of your own, install the skills there with the [skills installer](https://github.com/vercel-labs/skills):
+
+```sh
+bunx skills add RayFernando1337/sprite-stack-kit
+```
+
+The installer copies the skills only. The entry skill clones this kit beside your project the first time it needs the tools and the starter game.
 
 ## What you get
 

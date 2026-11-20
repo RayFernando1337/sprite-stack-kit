@@ -1,6 +1,6 @@
 ---
 name: sprite-stack-models
-description: "How to make, change, encode and draw sprite-stacked models in sprite-stack-kit: the grid of palette indices, sculpting shapes in code, three-tone shading, run-length base64 encoding, buildModel and drawStack. Use when changing the craft's shape or colours, adding another object (enemy, boat, building, pickup), converting pixel art or slices into a model, fixing holes or wrong draw order in a stack, or adding flames, trails or an outline to a model."
+description: "How to make, change, encode and draw sprite-stacked models in sprite-stack-kit: the grid of palette indices, sculpting shapes in code, three-tone shading, run-length base64 encoding, buildModel and drawStack, and cutting a model from four flat drawings with bun run views. Use when changing the craft's shape or colours, adding another object (enemy, boat, building, pickup), converting pixel art, a four-view sheet or slices into a model, fixing holes or wrong draw order in a stack, or adding flames, trails or an outline to a model."
 ---
 
 # Stacked models
@@ -71,11 +71,13 @@ drawStack(to, cam, model, pose, time)
 1. Make a new file, for example `boat.js`. Fill a grid, call `shadeGrid(grid, size)`, then `buildModel`.
 2. In `game.js`, build the model once in `createGame` and keep one pose object for each copy.
 3. In `render()`, call `drawStack(to, …)` for each one after `drawSky` and before `pasteRolled`.
-4. If objects can overlap, draw the farther one first. `project(cam, x, y, z)` sets `cam.depth`, which you can sort by.
+4. If objects can overlap, draw the farther one first. `project(cam, x, y, z)` sets `cam.depth`, which you can sort by. Use the point where each object touches the ground, and sort whole stacks. Never mix the slices of two stacks.
 
 A model that sits on the ground gets `z` from `groundAt(world, x, y)`. A model on the sea uses `z = 0` plus a little.
 
-`drawWorld` takes one shadow caster. To give more objects shadows, extend the caster test in `terrain.js` to loop over a short list.
+`drawWorld` takes one shadow caster. For other craft, first try a blob: after the world is drawn, darken a small ellipse of ground under each one, as `drawShadow` in `examples/worldfight/src/game.js` does. For shadows with the model's own outline, extend the caster test in `terrain.js` to loop over a short list.
+
+**More than one model in a game.** The checks read `CRAFT_W`, `CRAFT_L`, `CRAFT_H` and `sculptGrid` together with `buildCraft`, so keep all five describing the same model. Every other model gets its own sizes and its own build function. `game.model` may be a getter, for a craft that changes shape. The starter's `buildModel` has one flame for every model and no gun mounts. `examples/worldfight/src/model.js` adds `flame` and `guns` to its spec.
 
 ## Storing a finished model
 
@@ -85,10 +87,28 @@ Use this when a model comes from somewhere other than code: paste the string int
 
 ## Models from pixel art
 
-A stack can be drawn by hand: one small image per slice, in any pixel editor. A stack can also be cut from top, side and front drawings of the object: a cell is filled when all three drawings are filled there.
+- **Four flat views.** `bun run views <sheet.png>` cuts a model from one PNG with top, side, front and back drawings, and writes a module with `SIZE`, `PALETTE` and `GRID`, plus a picture of the slices. Read `four-views.md`, beside this file, before you use it.
+- **Slices drawn by hand.** One small image per slice. Write a one-off Bun script that reads them with `decodePng` from `scripts/lib/png.mjs`, fills a grid and prints `encodeGrid(grid)`. Keep the script out of the game.
 
-To bring art in, write a one-off script for Bun that reads the images, fills a grid, and prints `encodeGrid(grid)`. Keep the script out of the game. `scripts/lib/png.mjs` writes PNG files; it does not read them, so the script needs its own reader.
+Art for either route: flat fills, few colours, no soft edges, and no outline in the slices. `drawStack` outlines the finished stack once. An outline in every slice shows as dark specks inside the body when it turns.
 
+These points, and the checks below, are from SpriteCook's article [Sprite stacking for fake 3D pixel art cars and props](https://www.spritecook.ai/blog/sprite-stacking-pixel-art).
+
+## Camera height, and a stack that never turns
+
+The article lowers the camera by squashing every slice to, say, 75% of its height before lifting it. Here that number is `cam.tilt`: on screen a point is at `height + tilt × depth`, so ground distances are scaled by `tilt` and each slice still rises one pixel. `tilt` 1 is the article's squash 1, and 0.75 is its squash 0.75. Do not squash the model itself.
+
+Every stack costs one pass over all its cells each frame. A stack that never turns, under a camera whose `heading`, `tilt` and `zoom` never change and whose `persp` is 0, always looks the same. Draw it once at start-up with `drawStack` into its own `createFramebuffer()`, then copy the pixels that are not `EMPTY` each frame. A copy like this skips the depth test, so hills and clouds will not hide it. In any view that turns or has perspective, call `drawStack` every frame.
+
+## Check the size
+
+With `persp` 0, `tilt` 1, `zoom` 1 and a pose of `yaw` 0, `scale` 1, `spread` 1:
+
+- The stack is `width` pixels wide and at most `length + height − 1` tall, plus the outline. It is less when the top or bottom slices are shorter than the rest.
+- Every pixel equals the slices pasted by hand, slice `z` drawn `z` pixels higher.
+- With `yaw` at 90° it is `length` wide. With `tilt` 0.75 it is shorter. With `spread` 2 it is taller.
+
+`tests/views.test.js` does these for a model cut from four views. Copy its `drawFlat` when a new model draws at the wrong size.
 ## How drawing works
 
 - Every cell is a small flat tile. `drawStack` projects its centre and fills every pixel inside the tile's outline. Neighbouring tiles overlap by a sliver, so a turned slice has no holes.
@@ -103,4 +123,5 @@ To bring art in, write a one-off script for Bun that reads the images, fills a g
 - **Wrong pivot.** `pivotK` and `pivotZ` should be near the model's centre of mass, or it will swing when it turns.
 - **Looking exactly side-on.** Slices are flat, so a stack seen from eye level thins out. Keep cameras above about 10 degrees, or use more slices.
 - **A stack right in front of the eye.** In the cockpit view another object can come very close. Fade it with `solid` by its `eyeDistance`, as `settle()` in `game.js` does for the craft.
+- **A small stack that turns.** A turning stack changes in whole-pixel jumps, and on a small one every jump shows. Draw it larger with `pose.scale` or `cam.zoom`.
 - **Changing `REACH` in `stack.js`.** Lower values open seams between tiles.

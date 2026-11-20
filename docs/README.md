@@ -36,7 +36,8 @@ The folders in [`.agents/skills`](../.agents/skills) are written for coding agen
 | Change the land, the sea, the clouds or the sky | [stacked-terrain](../.agents/skills/stacked-terrain/SKILL.md) |
 | Change the camera or add a view | [one-camera-views](../.agents/skills/one-camera-views/SKILL.md) |
 | Change the cockpit, or add a dial, a screen, a score or a health bar | [cockpit-and-hud](../.agents/skills/cockpit-and-hud/SKILL.md) |
-| Tune the controls, or add particles, enemies or sound | [game-feel](../.agents/skills/game-feel/SKILL.md) |
+| Tune the controls, trails or flames | [game-feel](../.agents/skills/game-feel/SKILL.md) |
+| Add enemies, weapons, explosions, screen shake or sound | [combat-and-juice](../.agents/skills/combat-and-juice/SKILL.md) |
 | Find out how Dash's game does something | [study-the-reference](../.agents/skills/study-the-reference/SKILL.md) |
 | Check a feature in every state the game can reach | [verify-states](../.agents/skills/verify-states/SKILL.md) |
 | Make sure a change really works | [check-your-work](../.agents/skills/check-your-work/SKILL.md) |

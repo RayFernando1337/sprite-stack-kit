@@ -59,6 +59,19 @@
       #up {
         top: 84px;
       }
+      /* over the city there is no way further down, so the missile button takes DOWN's place */
+      #missile {
+        top: 48px;
+      }
+      #boost {
+        top: 120px;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      button[hidden] {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -66,6 +79,8 @@
     <button id="view" type="button">VIEW</button>
     <button id="down" type="button">DOWN</button>
     <button id="up" type="button">UP</button>
+    <button id="missile" type="button" hidden>MSL</button>
+    <button id="boost" type="button" hidden>BOOST</button>
     <div id="hint"></div>
     <!-- Opened straight from disk, a browser refuses to load the game's modules and the page stays blank. -->
     <script>

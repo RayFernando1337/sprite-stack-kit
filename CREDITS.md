@@ -21,6 +21,7 @@ Dash made **fighter**, the game that started all of this, and published it on [U
 - the way the slices of a stack are ordered and outlined
 - the cockpit view: an eye inside the craft that dissolves the craft on the way in, a banked picture made by drawing the world on a larger sheet and turning it, and a pixel-art cockpit painted once with live instruments and a head-up display drawn over it
 - the flight feel
+- the shape of the dogfight that the `combat-and-juice` skill describes: a cannon that fires as a stream, lock-on missiles, a roll that answers every threat, slow motion for a well-timed dodge, and a loss that plays out as a short scene
 
 The documents in `docs/` and the skills describe how his code is organised.
 
@@ -75,6 +76,10 @@ Other replies shaped how [`docs/how-it-works.md`](docs/how-it-works.md) is writt
 
 **Anthropic** publishes guidance on writing for current models, which is why `AGENTS.md` is short and the detail sits in skills that are read when needed: [The new rules of context engineering for Claude 5 generation models](https://claude.dev/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models/) by Thariq Shihipar, and [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
 
+## Making models
+
+**SpriteCook** published [Sprite stacking for fake 3D pixel art cars and props](https://www.spritecook.ai/blog/sprite-stacking-pixel-art). This kit takes from it the idea of cutting slices from four flat views (`scripts/views.mjs`), its list of pitfalls and its size checks (the `sprite-stack-models` skill). None of its code or art is in this repository.
+
 ## Map data
 
 `examples/worldfight` rebuilds the real Earth from two open sources. `scripts/maps.mjs` downloads them and stores only small packed grids in the game.
@@ -84,6 +89,7 @@ Other replies shaped how [`docs/how-it-works.md`](docs/how-it-works.md) is writt
 
 ## Tools and older ideas
 
+- The [skills installer](https://github.com/vercel-labs/skills) from Vercel Labs copies this kit's skills into your own project.
 - [UI8 Forge](https://ui8.ai/forge) hosts Dash's game and serves the public build that `scripts/fetch-reference.mjs` downloads.
 - **Sprite stacking** is a long-standing pixel-art technique. Nobody listed here invented it.
 - Drawing a heightmap column by column from near to far is known as **Voxel Space**, after NovaLogic's *Comanche* (1992).

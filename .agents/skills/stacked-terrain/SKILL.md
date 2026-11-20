@@ -5,7 +5,7 @@ description: "How the world is built and drawn in sprite-stack-kit: the wrapping
 
 # The world
 
-Files: `examples/starter/src/world.js` (data) and `terrain.js` (drawing).
+Files, in the game's `src/` (the starter's is `examples/starter/src`): `world.js` (data) and `terrain.js` (drawing).
 
 ## The data
 
@@ -42,7 +42,7 @@ All randomness comes from `makeRng(seed)` and `hash2(x, y)`.
 
 **A new material.** Add a name to `MAT` and a row to `MATERIALS` at the same index. Keep water materials below `WATER_BELOW`. Then assign it in `buildWorld`.
 
-**A new biome.** Change the thresholds in the main loop of `buildWorld`: `rise > 0.8` is snow and `rise > 0.48` is rock. For a desert island, swap the grass colours for sand tones and drop the trees. A world with no sea at all needs more: stop placing the sea level in `buildWorld`, and make the changes under "The sea" in `.agents/skills/sprite-stack-game/needs.md`. For an ice world, lower the snow line.
+**A new biome.** Change the thresholds in the main loop of `buildWorld`: `rise > 0.8` is snow and `rise > 0.48` is rock. For a desert island, swap the grass colours for sand tones and drop the trees. A world with no sea at all needs more: stop placing the sea level in `buildWorld`, and make the changes under "The sea" in `needs.md`, in the `sprite-stack-game` skill's folder. For an ice world, lower the snow line.
 
 **A real place.** `examples/worldfight` builds its maps from real elevation data. `bun run maps` packs each place into a small grid in the source, and the game's `world.js` rebuilds the map from it. Read its README before you write your own.
 
@@ -84,9 +84,8 @@ To add **time of day**, write one function that tints a colour for sunset or nig
 
 - **Reading a map without the mask.** Every lookup must wrap, or the game breaks at the map's edge.
 - **A size that is not a power of two.** Masks and shifts stop working.
-- **Drawing the world after sprites.** The world only fills empty pixels, so it must go first.
-- **Overwriting in the sweep.** Never write a pixel that is not `EMPTY` inside `drawWorld`. Near ground would be painted over by far ground.
+- **Drawing the world after sprites, or overwriting in the sweep.** `drawWorld` goes first and only fills pixels that are `EMPTY`. Otherwise far ground paints over near ground.
 - **Moving things in the height map.** The map is for things that stay put. Anything that moves is a sprite stack, depth-tested against the map.
+- **Changing the shared world.** `scripts/states.mjs` builds one world and hands it to every game in a walk. A game that changes its world, such as cutting clouds, must work on its own copy of that map.
 - **A large picture.** The sweep costs one map lookup per screen column per depth step. Keep the picture near 400 pixels wide.
-- **Assuming the horizon is level.** The sweep draws an upright world. A banked view comes from turning the finished picture (`roll.js`), never from the sweep.
 - **Shimmer far away.** If distant ground flickers, lower `VIEW_DISTANCE` or start the fog sooner. Do not shrink the step size; that costs speed everywhere.

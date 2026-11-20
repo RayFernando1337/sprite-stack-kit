@@ -67,28 +67,30 @@ export function eyeHeight(cam) {
 }
 
 /**
- * Sets the camera to a mix of two poses. `chase` is how much of the chase pose is in the
- * mix, 0..1; whatever is left over is the overhead pose. `look`, `heading` and `tilt` are
- * worked out by the game, because they follow the ship.
+ * Sets the camera to a mix of three poses. `chase` and `cockpit` are how much of each of
+ * those poses is in the mix, 0..1; whatever is left over is the overhead pose. `look`,
+ * `heading` and `tilt` are mixed by the game, because they follow the craft.
  *
- *              overhead     chase
- *   persp      0            1 ÷ chaseDistance
- *   zoom       1            the ship fills chaseWidth
- *   anchor     the middle   a little below it
+ *              overhead     chase                    cockpit
+ *   persp      0            1 ÷ chaseDistance        1 ÷ cockpitLook
+ *   zoom       1            craft fills chaseWidth   lens ÷ cockpitLook
+ *   anchor     the middle   a little below it        a little above it
  */
-export function aimCamera(cam, chase, look, heading, tilt, width, height, tune) {
+export function aimCamera(cam, chase, cockpit, look, heading, tilt, width, height, tune) {
   cam.x = look.x
   cam.y = look.y
   cam.alt = look.alt
   cam.heading = heading
   cam.sin = Math.sin(heading)
   cam.cos = Math.cos(heading)
-  cam.persp = chase / tune.chaseDistance
+  cam.persp = chase / tune.chaseDistance + cockpit / tune.cockpitLook
   cam.tilt = tilt
   // Zoom slides geometrically, so things grow at an even rate all the way through a move.
-  cam.zoom = Math.exp(chase * Math.log(Math.max(1, (tune.chaseWidth * width) / tune.craftWidth)))
+  const chaseZoom = Math.max(1, (tune.chaseWidth * width) / tune.craftWidth)
+  const cockpitZoom = Math.max(1, (tune.cockpitLens * Math.max(width, height)) / tune.cockpitLook)
+  cam.zoom = Math.exp(chase * Math.log(chaseZoom) + cockpit * Math.log(cockpitZoom))
   cam.cx = width >> 1
-  cam.cy = Math.round(height * (0.5 + 0.13 * chase))
+  cam.cy = Math.round(height * (0.5 + 0.13 * chase - 0.12 * cockpit))
 }
 
 /** How far in front of the eye a point is, after project(). Infinite in the flat view. */

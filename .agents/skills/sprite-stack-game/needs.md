@@ -11,7 +11,13 @@
 
 The checks also expect this behaviour: the right key turns the craft clockwise, pointing up climbs, a click sets `craft.spin` to 0, a hold lifts `boost` above 0.6, and a held dive never reaches the ground. How fast any of it happens is the game's own tuning.
 
-## What a game may delete
+The click is tried on a fresh game after a second of turning. So no roll cooldown may be running then, and a click there may not mean something else, such as firing.
+
+In the cockpit view the checks want no pixel of `game.model.outline` in the frame, and in the other views more than 20. Give every other model, such as an enemy, its own `outline` colour in `buildModel`, and keep the craft's out of the cockpit and the HUD.
+
+## When the user wants something taken out
+
+Take a part out only when the user said so, and once the game plays without it. The checks skip what a game does not have.
 
 - **The cockpit.** Take `'cockpit'` out of `VIEWS`. Then `cockpit.js`, `roll.js`, `cockpitAmount`, `viewRoll` and the code that uses them can go. So can the rules in `states.js` that name the cockpit.
 - **The sea.** Take `LAND_SHARE` out of `world.js`, and the check on it is skipped. `terrain.js` and the spawn code in `world.js` use `MAT.SEA`, `MAT.SHALLOW`, `MAT.SURF` and `WATER_BELOW` by name, so change those lines too.

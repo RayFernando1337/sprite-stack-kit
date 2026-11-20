@@ -5,7 +5,7 @@ description: "How the low-resolution picture works in sprite-stack-kit: the Uint
 
 # The picture
 
-File: `examples/starter/src/framebuffer.js`. Shown by `main.js`.
+File: `framebuffer.js` in the game's `src/` (the starter's is `examples/starter/src`). Shown by `main.js`.
 
 ## What it is
 
@@ -91,19 +91,16 @@ There are two places for words and numbers. Choose by what they are.
 
 ## Whole-picture effects
 
-Run these after everything is drawn, as a loop over `fb.color`:
+Most run after everything is drawn, as a loop over `fb.color`. The `combat-and-juice` skill says when each one earns its place.
 
 - **Flash:** `mix` every pixel toward white by an amount that decays.
 - **Vignette:** precompute a per-pixel darkening table in `resize`, then apply it with `tint` logic.
-- **Screen shake:** add a small offset to `cam.cx` and `cam.cy` before drawing. Do not move the canvas.
-- **Rolling the whole view:** already built. See `roll.js` and the `one-camera-views` skill.
-- **Glow:** collect bright pixels at half size, blur, add back. Dash's `post.ts` does this. Use the `study-the-reference` skill to read it.
+- **Screen shake and glow:** the `combat-and-juice` skill has both, in its `feedback.md`. Shake moves `cam.cx` and `cam.cy`, never the canvas.
 
 ## Mistakes to avoid
 
 - **Fractional CSS scale.** If the canvas's CSS size is not an exact multiple of its pixel size, pixels come out uneven. Keep the `fit()` arithmetic.
 - **Smoothing.** Never draw the picture with `drawImage` scaling or CSS transforms that resample.
-- **Allocating per frame.** No `new`, no array literals, no closures inside `update` or `render`.
 - **Forgetting the bounds test.** Writing outside `0..width-1` wraps onto the next row.
 - **`| 0` on negative numbers.** It rounds toward zero, not down. Use `Math.floor`, or keep values positive as `terrain.js` does.
 - **Leaving `mask` dirty.** If you use it, clear the area you touched before returning.
