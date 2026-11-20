@@ -75,6 +75,13 @@ Other replies shaped how [`docs/how-it-works.md`](docs/how-it-works.md) is writt
 
 **Anthropic** publishes guidance on writing for current models, which is why `AGENTS.md` is short and the detail sits in skills that are read when needed: [The new rules of context engineering for Claude 5 generation models](https://claude.dev/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models/) by Thariq Shihipar, and [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
 
+## Map data
+
+`examples/worldfight` rebuilds the real Earth from two open sources. `scripts/maps.mjs` downloads them and stores only small packed grids in the game.
+
+- **Elevation:** [Mapzen terrain tiles](https://registry.opendata.aws/terrain-tiles/), hosted by AWS Open Data. They combine public sources that include SRTM, GMTED, ETOPO1 and the USGS 3DEP.
+- **Borders:** [Natural Earth](https://www.naturalearthdata.com/), which is in the public domain.
+
 ## Tools and older ideas
 
 - [UI8 Forge](https://ui8.ai/forge) hosts Dash's game and serves the public build that `scripts/fetch-reference.mjs` downloads.

@@ -1,6 +1,6 @@
-// A minimal PNG writer (RGBA, 8 bits per channel), so snapshots and figures need no dependencies.
+// A minimal PNG writer and reader, so snapshots, figures and map tiles need no dependencies.
 
-import { deflateSync } from 'node:zlib'
+import { deflateSync, inflateSync } from 'node:zlib'
 
 const CRC = new Uint32Array(256)
 for (let n = 0; n < 256; n++) {
@@ -50,4 +50,50 @@ export function encodePng(rgba, width, height, scale = 1) {
     chunk('IDAT', deflateSync(raw, { level: 9 })),
     chunk('IEND', Buffer.alloc(0)),
   ])
+}
+
+/** Reads an 8-bit RGB or RGBA PNG. Returns { width, height, channels, data }. */
+export function decodePng(file) {
+  let at = 8
+  let width = 0
+  let height = 0
+  let channels = 0
+  const parts = []
+  while (at < file.length) {
+    const size = file.readUInt32BE(at)
+    const type = file.toString('latin1', at + 4, at + 8)
+    const body = file.subarray(at + 8, at + 8 + size)
+    if (type === 'IHDR') {
+      width = body.readUInt32BE(0)
+      height = body.readUInt32BE(4)
+      if (body[8] !== 8 || (body[9] !== 2 && body[9] !== 6)) throw new Error(`cannot read this kind of PNG (colour type ${body[9]}, ${body[8]} bits)`)
+      channels = body[9] === 2 ? 3 : 4
+    }
+    if (type === 'IDAT') parts.push(body)
+    at += 12 + size
+  }
+  const raw = inflateSync(Buffer.concat(parts))
+  const stride = width * channels
+  const data = new Uint8Array(stride * height)
+  for (let y = 0; y < height; y++) {
+    const filter = raw[y * (stride + 1)]
+    for (let i = 0; i < stride; i++) {
+      const left = i >= channels ? data[y * stride + i - channels] : 0
+      const up = y ? data[(y - 1) * stride + i] : 0
+      const corner = i >= channels && y ? data[(y - 1) * stride + i - channels] : 0
+      let guess = 0
+      if (filter === 1) guess = left
+      else if (filter === 2) guess = up
+      else if (filter === 3) guess = (left + up) >> 1
+      else if (filter === 4) {
+        const p = left + up - corner
+        const a = Math.abs(p - left)
+        const b = Math.abs(p - up)
+        const c = Math.abs(p - corner)
+        guess = a <= b && a <= c ? left : b <= c ? up : corner
+      }
+      data[y * stride + i] = (raw[y * (stride + 1) + 1 + i] + guess) & 255
+    }
+  }
+  return { width, height, channels, data }
 }

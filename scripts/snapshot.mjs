@@ -7,6 +7,7 @@
 //   bun run snapshot --seconds 6 --width 480 --height 270 --scale 3
 //   bun run snapshot --turn 1 --boost                 # hold a right turn with the thrusters open
 //   bun run snapshot --game examples/boats            # a copy: the views it has, as boats-<view>-seed7.png
+//   bun run snapshot --game examples/boats --option level=2   # passed to the game's createGame()
 //
 // Views: top, chase, cockpit, between (half-way from the first view to the next), entering (half-way
 // from chase into the cockpit), apart (slices pulled apart).
@@ -30,6 +31,14 @@ const seconds = Number(flag('seconds', 3))
 const turn = Number(flag('turn', 0))
 const climb = Number(flag('climb', 0))
 const boost = args.includes('--boost')
+// --option name=value, as often as needed: extra options for the game's createGame()
+const extra = {}
+args.forEach((arg, i) => {
+  if (arg !== '--option') return
+  const [name, value] = (args[i + 1] ?? '').split('=')
+  extra[name] = value === '' || Number.isNaN(Number(value)) ? value : Number(value)
+})
+const tag = Object.entries(extra).map(([name, value]) => `${name}${value}-`).join('')
 const out = resolve(root, flag('out', 'snapshots'))
 const folder = flag('game', 'examples/starter')
 const { createGame, VIEWS } = await import(pathToFileURL(resolve(root, folder, 'src/game.js')).href)
@@ -55,7 +64,7 @@ const prefix = folder.replace(/\/+$/, '').endsWith('examples/starter') ? '' : `$
 
 mkdirSync(out, { recursive: true })
 for (const view of views) {
-  const game = createGame({ seed, view: START[view] ?? 'top' })
+  const game = createGame({ ...extra, seed, view: START[view] ?? 'top' })
   game.resize(width, height)
   if (turn || climb || boost) game.setKeys(turn, climb, boost)
   const frames = Math.round(seconds * 60)
@@ -66,7 +75,7 @@ for (const view of views) {
     game.update(1 / 60)
   }
   const frame = game.render()
-  const file = join(out, `${prefix}${view}-seed${seed}.png`)
+  const file = join(out, `${prefix}${tag}${view}-seed${seed}.png`)
   writeFileSync(file, encodePng(frame.bytes, frame.width, frame.height, scale))
   console.log(file)
 }

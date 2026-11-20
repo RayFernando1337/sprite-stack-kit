@@ -86,6 +86,8 @@ Never weaken a rule to get a pass.
 - Six to ten events. Leave out events that cannot change what happens next.
 - State fields with two to four values each. The number of states is their product.
 - Keep the walk under about ten seconds, so it gets run after every change.
+- The walk stops at paths of 12 steps. A game with longer chains sets `depth` in the map's `start`.
+- Where a number decides what happens next, such as hull strength, put the number itself in the state, not a group like "hurt". The walk goes on from only one game in each state.
 
 ## Where this comes from
 

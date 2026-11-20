@@ -46,6 +46,7 @@ This writes PNG files to `snapshots/`. Open them and look. If you can read image
 | `--width 480 --height 270` | Frame size |
 | `--scale 3` | How much to enlarge the saved image |
 | `--game examples/my-game` | Use a copy of the starter |
+| `--option level=2` | Passed to the game's `createGame()`, for games that take their own options |
 | `--out some/folder` | Where to save |
 
 What to look for:

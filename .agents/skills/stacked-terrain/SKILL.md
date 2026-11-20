@@ -44,6 +44,8 @@ All randomness comes from `makeRng(seed)` and `hash2(x, y)`.
 
 **A new biome.** Change the thresholds in the main loop of `buildWorld`: `rise > 0.8` is snow and `rise > 0.48` is rock. For a desert island, swap the grass colours for sand tones and drop the trees. A world with no sea at all needs more: stop placing the sea level in `buildWorld`, and make the changes under "The sea" in `.agents/skills/sprite-stack-game/needs.md`. For an ice world, lower the snow line.
 
+**A real place.** `examples/worldfight` builds its maps from real elevation data. `bun run maps` packs each place into a small grid in the source, and the game's `world.js` rebuilds the map from it. Read its README before you write your own.
+
 **Buildings, walls, towers.** After the land is made, stamp them: raise `heights` over a rectangle and set a material. A building is a tall column with its own top and side colours.
 
 **Roads and rivers.** Walk a path across the map and set the material, and for a river also set the height to 0.

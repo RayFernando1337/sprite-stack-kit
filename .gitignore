@@ -5,6 +5,9 @@ reference/
 # Frames saved by scripts/snapshot.mjs
 snapshots/
 
+# Map tiles downloaded by scripts/maps.mjs
+.cache/
+
 node_modules/
 .DS_Store
 *.log

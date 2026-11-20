@@ -125,6 +125,7 @@ It is a base, not a finished game.
 | Path | What it is |
 | --- | --- |
 | `START.md` | Where a person points their coding agent. It leads to the entry skill, `.agents/skills/sprite-stack-game`, and its playbooks |
+| `examples/worldfight/` | A game built with the kit's own playbook: the real Earth on three levels, down to a dogfight over San Francisco |
 | `examples/starter/` | The game to fork: 13 files, 99 KB with comments, 37 KB gzipped, plus its state map |
 | `docs/` | The picture tour, the tutorial, the deeper look, the glossary, and how to get and read the original |
 | `.agents/skills/` | Skills for coding agents, one folder each. They are plain how-to guides, so people can read them too |

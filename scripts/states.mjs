@@ -22,10 +22,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 /** Explores the game in `game` (a folder, relative to the kit). Returns what it found. */
-export async function runStates({ game: folder = 'examples/starter', depth = 12 } = {}) {
+export async function runStates({ game: folder = 'examples/starter', depth } = {}) {
   const dir = resolve(root, folder)
   const { createGame } = await import(pathToFileURL(join(dir, 'src/game.js')).href)
   const map = await import(pathToFileURL(join(dir, 'states.js')).href)
+  depth ??= map.start.depth ?? 12 // a map with long chains of steps says so itself
   const steps = [...Object.keys(map.events), ...Object.keys(map.waits)]
   const broken = new Map() // rule name → { path, detail }: the first, so the shortest, path that breaks it
   let frames = 0
@@ -129,7 +130,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     return at < 0 ? undefined : process.argv[at + 1]
   }
   const began = performance.now()
-  const found = await runStates({ game: flag('game'), depth: Number(flag('depth') ?? 12) })
+  const found = await runStates({ game: flag('game'), depth: flag('depth') ? Number(flag('depth')) : undefined })
   const { map, seen, arrows, broken, tried, frames, longest, complete } = found
   console.log(`${found.folder}: ${seen.size} states, ${arrows.size} moves between them`)
   console.log(`${tried} paths tried, up to ${longest} steps long, ${frames} frames flown, ${((performance.now() - began) / 1000).toFixed(1)} s`)

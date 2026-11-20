@@ -14,6 +14,7 @@
     "states": "bun scripts/states.mjs",
     "snapshot": "bun scripts/snapshot.mjs",
     "figures": "bun scripts/figures.mjs",
+    "maps": "bun scripts/maps.mjs",
     "fetch-reference": "bun scripts/fetch-reference.mjs",
     "reference": "bun scripts/serve.mjs reference/creativedash-fighter"
   }
